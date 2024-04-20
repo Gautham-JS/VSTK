@@ -8,7 +8,7 @@
 #define __IMG_SVC_PROTO_IMPL_H
 
 
-namespace x3ds {
+namespace vstk {
 
     class ImageSvc final : public X3DSService::Service {
         ::grpc::Status UploadImage(::grpc::ServerContext* context, ::grpc::ServerReader< ::UploadImageRequest>* reader, ::UploadImageResponse* response);

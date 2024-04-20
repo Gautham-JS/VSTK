@@ -2,7 +2,7 @@
 export TP_BUILD_ROOT="$(pwd)/thirdparty"
 
 
-GRPC_VER="1.61.1"
+GRPC_VER="1.62.1"
 OPENCV_VER="4.9.0"
 BOOST_VER="1.83.0"
 
@@ -82,7 +82,7 @@ function install_opencv {
     -D WITH_VTK=OFF \
     -D BUILD_TESTS=OFF \
     -D BUILD_PERF_TESTS=OFF \
-    -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_BUILD_TYPE=DEBUG \
     -D BUILD_opencv_python2=OFF \
     -D BUILD_opencv_python3=OFF \
     -D CMAKE_INSTALL_PREFIX=$TP_BUILD_ROOT/opencv/install \

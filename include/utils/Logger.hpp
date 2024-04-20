@@ -4,14 +4,14 @@
 #include "boost/format.hpp"
 #include "boost/log/trivial.hpp"
 
-#ifndef __X3DS_LOGGER_H
-#define __X3DS_LOGGER_H
+#ifndef __VSTK_LOGGER_H
+#define __VSTK_LOGGER_H
 
-#define DBGLOG(format, ...) {x3ds::Logger::get().log_debug(format, ##__VA_ARGS__);}
-#define INFOLOG(format, ...) {x3ds::Logger::get().log_info(format, ##__VA_ARGS__);}
-#define ERRORLOG(format, ...) {x3ds::Logger::get().log_error(format, ##__VA_ARGS__);}
-#define WARNLOG(format, ...) {x3ds::Logger::get().log_warn(format, ##__VA_ARGS__);}
-namespace x3ds {
+#define DBGLOG(format, ...) {vstk::Logger::get().log_debug(format, ##__VA_ARGS__);}
+#define INFOLOG(format, ...) {vstk::Logger::get().log_info(format, ##__VA_ARGS__);}
+#define ERRORLOG(format, ...) {vstk::Logger::get().log_error(format, ##__VA_ARGS__);}
+#define WARNLOG(format, ...) {vstk::Logger::get().log_warn(format, ##__VA_ARGS__);}
+namespace vstk {
     
     class Logger {
         protected:

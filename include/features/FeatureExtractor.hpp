@@ -1,8 +1,10 @@
 #include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 #include <memory.h>
 #include <string.h>
 
-#include "config/config.hpp"
+#include "config/Config.hpp"
+#include "utils/Logger.hpp"
 
 #ifndef __FEATURE_EXTRACTOR_H
 #define __FEATURE_EXTRACTOR_H
@@ -26,42 +28,47 @@
 */
 
 
-namespace x3ds {
+namespace vstk {
 
-    class FeatureExtractor {
-        private:
-            cv::Ptr<cv::Feature2D> f2d = cv::SIFT::create();
-            std::vector<cv::KeyPoint> kps;
-            cv::Mat descriptors;
-            std::shared_ptr<cv::Mat> image;
-            LoadScheme load_scheme;
-
-        public:
-            explicit FeatureExtractor(std::shared_ptr<cv::Mat> &&imagePtr);
-            explicit FeatureExtractor(std::shared_ptr<cv::Mat> &&imagePtr, LoadScheme load_scheme);
-            explicit FeatureExtractor();
-            void run_sift();
-            void display_features();
-            std::vector<cv::KeyPoint> get_keypoints();
-            cv::Mat get_descriptors();
-            cv::Mat get_image();
-    };
+    typedef struct FeaturesHolder {
+        std::vector<cv::KeyPoint> kps;
+        cv::Mat descriptors;
+    } FeaturesHolder;
 
     class ImageContextHolder {
         private:
-            std::shared_ptr<x3ds::FeatureExtractor> feature_extractor;
-            std::string image_path;
-            LoadScheme loading_scheme;
+            std::string image_id;
+            cv::Mat image_data;
+            uint32_t image_length;
+            uint32_t image_width;
+            FeaturesHolder holder;
 
             void init();
-            x3ds::FeatureExtractor get_extractor();
         public:
             explicit ImageContextHolder(std::string image_path);
-            explicit ImageContextHolder(std::string image_path, LoadScheme load_scheme);
-            std::string get_image_path();
+            explicit ImageContextHolder(unsigned char *image_data, uint32_t image_width, uint32_t image_length);
+            explicit ImageContextHolder();
+            std::string get_image_id();
             cv::Mat get_image();
-            std::vector<cv::KeyPoint> get_keypoints();
-            cv::Mat get_descriptors();
+            bool is_image_in_memory();
+            FeaturesHolder get_features_holder(); 
+            void set_feature_holder(FeaturesHolder holder);
+            void clear_image_data();
+
+            void load_image_path(std::string image_path);
+            void load_image_data(unsigned char *image_data, uint32_t image_length, uint32_t image_width);
+    };
+
+    class FeatureExtractor {  
+        private:
+            cv::Ptr<cv::Feature2D> fextract;
+            cv::Ptr<cv::Feature2D> fcompute;
+            VstkConfig config;
+
+        public:
+            explicit FeatureExtractor(VstkConfig config);
+            FeaturesHolder run_sift(ImageContextHolder &image_ctx);
+            void display_features(ImageContextHolder image_ctx);
     };
 }
 

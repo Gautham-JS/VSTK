@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+message ManageExchangeRequest {
+	// state of the exchage. 
+	// values : start/interrupt/complete
+	string state = 1;
+	// Specifies scheme to execute IO calls.
+	// values : disk (default) / in-memory
+	optional string io_scheme = 2;
+	// Process images in-stream on the fly (in-stream, default) or wait for upload 
+	// stage and then move to processsing stage (staged).
+	optional string processing_scheme = 3;
+	// Only to use with interrupt/complete states.
+	// Specifies the ID returned on start call to interrupt/complete 
+	optional string exchange_id = 4;
+	// provides additional info regd start and end of stream. For tracking progress
+	// stream automatically stops when end number is hit 
+	optional uint32 start_image_number = 5;
+	optional uint32 end_image_number = 6;
+}
+
+message ManageExchangeResponse {
+	string state = 1;
+	string exchange_id = 2;
+	
+	optional string error_id = 3;
+	optional string error_message = 4;
+}
+
+// request for upload request
+message UploadImageRequest {
+  oneof data {
+    bytes chunk_data = 1;
+  };
+  string image_id = 2;
+  string client_id = 3;
+  string image_type = 4;
+  string exchange_id = 5;
+  
+  int32 image_number = 6;
+  string image_color_space = 7;
+  optional uint32 chunk_number = 8;
+  optional string chunk_id = 9;
+  optional uint32 start_chunk_number = 10;
+  optional uint32 end_chunk_number = 11;
+}
+
+message UploadImageResponse {
+  string exchange_id = 1;
+  string client_id = 2;
+  
+  optional string chunk_id = 3;
+  
+  
+  optional string error_id = 4;
+  optional string error_message = 5;
+}
+
+service X3DSService {
+  rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse) {};
+  rpc ManageExchange(ManageExchangeRequest) returns (ManageExchangeResponse) {};
+}

@@ -18,7 +18,7 @@ set (BUILD_SHARED_LIBS ON)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/grpc/grpc/ ${CMAKE_BINARY_DIR}/thirdparty/grpc/)
 
-
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/")
 list(APPEND CMAKE_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/lib/")
 
@@ -34,7 +34,7 @@ set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/thirdparty/opencv/build/")
 
 
 find_package( OpenCV REQUIRED )
-find_package( Boost REQUIRED COMPONENTS log)
+find_package( Boost REQUIRED COMPONENTS log filesystem)
 
 # Proto file
 get_filename_component(svc_proto "${CMAKE_SOURCE_DIR}/protobuf/image_svc.proto" ABSOLUTE)
@@ -72,6 +72,7 @@ add_custom_command(
 )
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
+include_directories( ${Protobuf_INCLUDE_DIRS} )
 include_directories( ${CMAKE_SOURCE_DIR}/protos/ )
 
 include_directories(
@@ -79,6 +80,25 @@ include_directories(
   "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/include/opencv4/"
   "${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/include/"
 ) 
+
+
+
+
+if (NOT DEFINED OpenCV_LIBS)
+	message(FATAL_ERROR "OpenCV Libraries : [UNDEFINED]")
+endif()
+message("OpenCV Libraries : [OK]")
+
+if(NOT DEFINED Boost_LIBRARIES) 
+	message(FATAL_ERROR "Boost Libraries : [UNDEFINED]")
+endif()
+message( "Boost Libraries : [OK]")
+
+if(NOT DEFINED Protobuf_INCLUDE_DIRS)
+  message( "Protocol Buffer Libraries : [UNDEFINED]" )
+endif()
+message( "Protocol Buffer Libraries : [OK] :: ${Protobuf_INCLUDE_DIRS}" )
+
 
 
 add_library(svc_grpc_proto SHARED
@@ -103,27 +123,29 @@ add_library(
 target_link_libraries( image_svc_vstk grpc++ grpc++_unsecure libprotobuf ${Boost_LIBRARIES})
 
 add_library(
+    config_vstk SHARED
+    src/config/Config.cpp
+)
+target_link_libraries(config_vstk  ${Boost_LIBRARIES})
+
+add_library(
+    io_vstk SHARED
+    src/io/DiskIO.cpp
+)
+target_link_libraries(io_vstk  ${Boost_LIBRARIES})
+
+add_library(
     utils_vstk SHARED
     src/utils/ObjectLifecycle.cpp
 )
-
 target_link_libraries(utils_vstk  ${Boost_LIBRARIES})
 
 
+add_executable( vstk src/main.cpp )
 
-add_executable( 3ds src/main.cpp )
+target_link_libraries( vstk ${Boost_LIBRARIES})
 
-
-
-message( "OPENCV LIBS :: ${Boost_LIBRARIES}" )
-message( "BOOST INCL :: ${Boost_LOG_LIBRARY}" )
-
-
-
-target_link_libraries( 3ds ${Boost_LIBRARIES})
-
-target_link_libraries( 3ds features_vstk utils_vstk )
-target_link_libraries( 3ds svc_grpc_proto image_svc_vstk )
-target_link_libraries( 3ds ${OpenCV_LIBS})
-target_link_libraries( 3ds grpc++ grpc++_unsecure )
-
+target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk)
+target_link_libraries( vstk svc_grpc_proto image_svc_vstk )
+target_link_libraries( vstk ${OpenCV_LIBS})
+target_link_libraries( vstk grpc++ grpc++_unsecure )

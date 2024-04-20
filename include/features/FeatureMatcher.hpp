@@ -9,7 +9,7 @@
 #ifndef __FEATURE_MATCHER_H
 #define __FEATURE_MATCHER_H
 
-namespace x3ds {
+namespace vstk {
 
     typedef struct MatchesHolder {
         std::vector<std::vector<cv::DMatch>> knn_matches;
@@ -21,16 +21,13 @@ namespace x3ds {
     class FeatureMatcher{
     private:
         cv::Ptr<cv::DescriptorMatcher> matcher;
-        std::shared_ptr<x3ds::FeatureExtractor> im1_extractor, im2_extractor;
-        x3ds::ObjectLifecycle lifecycle;
-        std::shared_ptr<std::vector<cv::DMatch>> good_matches = nullptr;
-        
-        void lowe_threshold(std::vector<std::vector<cv::DMatch>> raw_knn_matches);
+        vstk::VstkConfig config;
+
+        void lowe_threshold(MatchesHolder &holder);
     public:
-        FeatureMatcher(std::unique_ptr<x3ds::FeatureExtractor> &&extractor1, std::unique_ptr<x3ds::FeatureExtractor> &&extractor2);
-        FeatureMatcher(std::shared_ptr<x3ds::FeatureExtractor> &&extractor1, std::shared_ptr<x3ds::FeatureExtractor> &&extractor2);
-        void run();
-        void display_matches();
+        FeatureMatcher(vstk::VstkConfig config);
+        MatchesHolder run(ImageContextHolder &image1_ctx, ImageContextHolder &image2_ctx);
+        void display_matches(ImageContextHolder image1_ctx, ImageContextHolder image2_ctx, MatchesHolder holder);
     };
     
 }

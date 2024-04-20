@@ -1,5 +1,8 @@
 #include "protoimpl/ImageSvc.hpp"
 
+
+using namespace vstk;
+
 void log_upload_image_request(UploadImageRequest req) {
     INFOLOG("Reading data...");
     INFOLOG("Image data : %s", std::string(req.chunk_data()).c_str());
@@ -26,7 +29,7 @@ void log_manage_exchange_req(ManageExchangeRequest req) {
     if(req.has_end_image_number()) INFOLOG("End Image Number : %d", req.end_image_number());
 }
 
-grpc::Status x3ds::ImageSvc::UploadImage(grpc::ServerContext* context, grpc::ServerReader<UploadImageRequest>* reader, UploadImageResponse* response) {
+grpc::Status ImageSvc::UploadImage(grpc::ServerContext* context, grpc::ServerReader<UploadImageRequest>* reader, UploadImageResponse* response) {
     INFOLOG("Received upload image request");
     UploadImageRequest req;
     INFOLOG("Stream loop : start");
@@ -39,7 +42,7 @@ grpc::Status x3ds::ImageSvc::UploadImage(grpc::ServerContext* context, grpc::Ser
 }
 
 
-grpc::Status x3ds::ImageSvc::ManageExchange(grpc::ServerContext* context, const ManageExchangeRequest* request, ManageExchangeResponse* response) {
+grpc::Status ImageSvc::ManageExchange(grpc::ServerContext* context, const ManageExchangeRequest* request, ManageExchangeResponse* response) {
     INFOLOG("Received manage exchange request");
     log_manage_exchange_req(*request);
     return grpc::Status::OK;

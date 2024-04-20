@@ -7,36 +7,61 @@
 #include "features/FeatureMatcher.hpp"
 #include "protoimpl/ImageSvc.hpp"
 #include "utils/Logger.hpp"
-
+#include "config/Config.hpp"
+#include "io/DiskIO.hpp"
 
 
 
 using namespace std; 
+using namespace vstk;
 
-void runMatcher() {
-    INFOLOG("Running feature matcher");
+const std::string working_dir = "/home/gjs/software/3D_Indexer/data/";
+const std::string im_pattens = "/home/gjs/software/3D_Indexer/data/*.jpg";
 
-    std::unique_ptr<cv::Mat> im1 = std::make_unique <cv::Mat> (cv::imread("/home/gjs/Downloads/rm1.jpg", cv::IMREAD_GRAYSCALE));
-    std::unique_ptr<cv::Mat> im2 = std::make_unique <cv::Mat> (cv::imread("/home/gjs/Downloads/rm2.jpg", cv::IMREAD_GRAYSCALE));
+void run_locally(std::string path) {
+
+    VstkConfig conf;
+    conf.set_run_data_dir(path);
+    conf.set_feature_extraction_algo(vstk::FExtractionAlgorithm::FAST);
+    conf.set_descriptor_compute_algo(vstk::DComputeAlgorithm::ORB);
+    conf.set_match_algo(vstk::MatchAlgorithm::BF);
+
+    DBGLOG(
+        "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n=========================================================\n", 
+        vstk::enum_to_str(conf.get_feature_extraction_algo()), 
+        vstk::enum_to_str(conf.get_descriptor_compute_algo()),
+        vstk::enum_to_str(conf.get_match_algorithm())
+    );
+
+
+    DiskIO disk_io(working_dir, "matches");
+    vector<string> files = disk_io.list_directory(path);
+    vector<ImageContextHolder> image_list;
     
-    x3ds::FeatureExtractor extractor1(std::move(im1));
-    x3ds::FeatureExtractor extractor2(std::move(im2));
-    std::unique_ptr<x3ds::FeatureExtractor> eptr1 = std::make_unique<x3ds::FeatureExtractor>(extractor1);
-    std::unique_ptr<x3ds::FeatureExtractor> eptr2 = std::make_unique<x3ds::FeatureExtractor>(extractor2);
+    ImageContextHolder image(files[0]);
+    FeatureExtractor extractor(conf);
+    FeatureMatcher matcher(conf);
 
-    eptr1.get()->run_sift();
-    eptr2.get()->run_sift();
+    extractor.run_sift(image);
+    INFOLOG("Initial features : %d, Descriptors : %d", image.get_features_holder().kps.size(), image.get_features_holder().descriptors.size());
+    image_list.push_back(image);
 
-    x3ds::FeatureMatcher matcher(std::move(eptr1), std::move(eptr2));
-    matcher.run();
-    matcher.display_matches();
-
+    for (int i=1; i<files.size(); i++) {
+        INFOLOG("Loading image [ %d / %d ]", i, files.size() - 1);
+        ImageContextHolder prev_image = image_list[i - 1];        
+        ImageContextHolder next_image(files[i]);
+        extractor.run_sift(next_image);
+        
+        MatchesHolder match_holder = matcher.run(prev_image, next_image);
+        INFOLOG("Detected %d features.", match_holder.good_matches.size());
+        image_list.emplace_back(next_image);
+    }
 }
 
 void bindToGRPC(std::string addr) {
 
     INFOLOG("Attempting to bind using grpc to address %s", addr.c_str());
-    x3ds::ImageSvc image_service;
+    ImageSvc image_service;
     grpc::ServerBuilder server_builder;
     INFOLOG("Server binding");
     server_builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
@@ -52,6 +77,7 @@ void bindToGRPC(std::string addr) {
 }
 
 int main(int argc, char** argv ) {
-    bindToGRPC("localhost:34015");
+    run_locally(im_pattens);
+    //bindToGRPC("localhost:34015");
     return 0;
 }

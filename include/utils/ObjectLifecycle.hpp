@@ -6,7 +6,7 @@
 #ifndef __OBJ_LIFECYCLE_H
 #define __OBJ_LIFECYCLE_H
 
-namespace x3ds {
+namespace vstk {
 
     class ObjectLifecycle {
         private:

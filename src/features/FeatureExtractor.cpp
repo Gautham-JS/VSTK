@@ -1,71 +1,153 @@
 #include "features/FeatureExtractor.hpp"
 #include "utils/Logger.hpp"
 
+#include <functional>
+#include <random>
+#include <sstream>
 
+using namespace vstk;
 
-x3ds::ImageContextHolder::ImageContextHolder(std::string image_path) {
-    ImageContextHolder(image_path, LoadScheme::IN_MEMORY_COMPLETE);
+static std::random_device               rd;
+static std::mt19937                     gen(rd());
+static std::uniform_int_distribution<>  dis(0, 15);
+static std::uniform_int_distribution<>  dis2(8, 11);
+
+std::string generate_uuid_v4() {
+    std::stringstream ss;
+    int i;
+    ss << std::hex;
+    for (i = 0; i < 8; i++) {
+        ss << dis(gen);
+    }
+    ss << "-";
+    for (i = 0; i < 4; i++) {
+        ss << dis(gen);
+    }
+    ss << "-4";
+    for (i = 0; i < 3; i++) {
+        ss << dis(gen);
+    }
+    ss << "-";
+    ss << dis2(gen);
+    for (i = 0; i < 3; i++) {
+        ss << dis(gen);
+    }
+    ss << "-";
+    for (i = 0; i < 12; i++) {
+        ss << dis(gen);
+    };
+    return ss.str();
 }
 
-x3ds::ImageContextHolder::ImageContextHolder(std::string image_path, x3ds::LoadScheme load_scheme) 
-    : image_path(image_path), loading_scheme(load_scheme) {
-    
-    cv::Mat image = cv::imread(image_path, cv::IMREAD_GRAYSCALE);
-    x3ds::FeatureExtractor extractor(
-        std::move(std::make_shared<cv::Mat>(image)),
-        load_scheme
+ImageContextHolder::ImageContextHolder(std::string image_path) {
+    load_image_path(image_path);
+}
+
+ImageContextHolder::ImageContextHolder(unsigned char *image_data, uint32_t image_width, uint32_t image_length) {
+    load_image_data(image_data, image_length, image_width);
+}
+
+void ImageContextHolder::load_image_data(unsigned char *image_data, uint32_t image_length, uint32_t image_width) {
+    this->image_width = image_width;
+    this->image_length = image_length;
+    this->image_id = generate_uuid_v4();
+    this->image_data = cv::Mat(image_width, image_length, CV_8UC1, image_data);
+}
+
+void ImageContextHolder::load_image_path(std::string image_path) {
+    this->image_data = cv::imread(image_path, cv::IMREAD_COLOR);
+    this->image_id = image_path;
+    this->image_length = this->image_data.cols;
+    this->image_width = this->image_data.rows;
+}
+
+ImageContextHolder::ImageContextHolder() {
+
+}
+
+FeaturesHolder ImageContextHolder::get_features_holder() {
+    return this->holder;
+}
+
+void ImageContextHolder::set_feature_holder(FeaturesHolder holder) {
+    this->holder = holder;
+}
+
+cv::Mat ImageContextHolder::get_image() {
+    return this->image_data;
+}
+
+std::string ImageContextHolder::get_image_id() {
+    return this->image_id;
+}
+
+bool ImageContextHolder::is_image_in_memory() {
+    return this->image_data.empty();
+}
+
+
+void ImageContextHolder::clear_image_data() {
+    this->image_data.release();
+}
+
+
+FeaturesHolder FeatureExtractor::run_sift(ImageContextHolder& image_ctx) {
+    INFOLOG("Running feature extract and compute engines");
+    FeaturesHolder feature_holder;
+    this->fextract->detect(
+        image_ctx.get_image(), 
+        feature_holder.kps
     );
-    this->feature_extractor = std::make_shared<FeatureExtractor>(extractor);
+    this->fcompute->compute(
+        image_ctx.get_image(), 
+        feature_holder.kps,
+        feature_holder.descriptors
+    );
+    image_ctx.set_feature_holder(feature_holder);
+    return feature_holder;
+}
+void display_features(ImageContextHolder image_ctx);
+
+
+
+FeatureExtractor::FeatureExtractor(vstk::VstkConfig config) : config(config) {
+    switch (config.get_descriptor_compute_algo()) {
+        case vstk::DComputeAlgorithm::ORB :
+            this->fcompute = cv::ORB::create();
+            break;
+        case vstk::DComputeAlgorithm::SIFT :
+            this->fcompute = cv::SIFT::create();
+            break;
+        default:
+            this->fcompute = cv::ORB::create();
+            break;
+    }
+
+    switch (config.get_feature_extraction_algo()) {
+        case vstk::FExtractionAlgorithm::FAST :
+            this->fextract = cv::FastFeatureDetector::create();
+            break;
+        case vstk::FExtractionAlgorithm::ORB :
+            this->fextract = cv::ORB::create();
+            break;
+        case vstk::FExtractionAlgorithm::SIFT :
+            this->fextract = cv::SIFT::create();
+        default:
+            this->fextract = cv::FastFeatureDetector::create();
+            break;
+    }
 }
 
-x3ds::FeatureExtractor x3ds::ImageContextHolder::get_extractor() {
-    return *(this->feature_extractor.get());
-}
 
-cv::Mat x3ds::ImageContextHolder::get_image() {
-    return this->get_extractor().get_image();
-}
-
-cv::Mat x3ds::ImageContextHolder::get_descriptors() {
-    return this->get_extractor().get_descriptors();
-}
-
-std::vector<cv::KeyPoint> x3ds::ImageContextHolder::get_keypoints() {
-    return this->get_extractor().get_keypoints();
-}
-
-std::string x3ds::ImageContextHolder::get_image_path() {
-    return this->image_path;
-}
-
-x3ds::FeatureExtractor::FeatureExtractor(std::shared_ptr<cv::Mat> &&imagePtr) : image(std::move(imagePtr)) {}
-x3ds::FeatureExtractor::FeatureExtractor(std::shared_ptr<cv::Mat> &&imagePtr, x3ds::LoadScheme load_scheme) 
-    : image(std::move(imagePtr)), load_scheme(load_scheme) {}
-
-
-void x3ds::FeatureExtractor::run_sift() {
-    INFOLOG("Running SIFT feature detector \n");
-    this->f2d->detect(*(this->image.get()), this->kps);
-    this->f2d->compute(*(this->image.get()), this->kps, this->descriptors);
-}
-
-
-void x3ds::FeatureExtractor::display_features() {
+void FeatureExtractor::display_features(ImageContextHolder image_ctx) {
     cv::Mat kp_im;
-    cv::drawKeypoints(*(this->image.get()), this->kps, kp_im, cv::Scalar(0, 255, 0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-    cv::imshow("SIFT keypoints", kp_im);
+    cv::drawKeypoints(
+        image_ctx.get_image(), 
+        image_ctx.get_features_holder().kps, 
+        kp_im, 
+        cv::Scalar(0, 255, 0), 
+        cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS
+    );
+    cv::imshow("keypoints", kp_im);
     cv::waitKey();
-}
-
-
-std::vector<cv::KeyPoint> x3ds::FeatureExtractor::get_keypoints() {
-    return this->kps;
-}
-
-cv::Mat x3ds::FeatureExtractor::get_descriptors() {
-    return this->descriptors;
-}
-
-cv::Mat x3ds::FeatureExtractor::get_image() {
-    return *(this->image);
 }

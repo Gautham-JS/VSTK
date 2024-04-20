@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/thirdparty/grpc/grpc/third_party/protobuf/src",
+                "${workspaceFolder}/thirdparty/grpc/grpc/third_party/abseil-cpp",
+                "${workspaceFolder}/thirdparty/grpc/grpc/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}
