@@ -67,7 +67,12 @@ void FeatureMatcher::display_matches(ImageContextHolder image1_ctx, ImageContext
         cv::Scalar(0, 255, 0)
     );
     cv::imshow("FLANN Matches", im_matches);
-    cv::waitKey();
+    int key = (cv::waitKey(1) & 0xFF);
+    if(key == 'q') {
+        INFOLOG("Caught 'q' keypress, exitting process.");
+        cv::destroyAllWindows();
+        exit(0);
+    }
 }
 
 

@@ -16,7 +16,7 @@ using namespace std;
 using namespace vstk;
 
 const std::string working_dir = "/home/gjs/software/3D_Indexer/data/";
-const std::string im_pattens = "/home/gjs/software/3D_Indexer/data/*.jpg";
+const std::string im_pattens = "/home/gjs/software/vstk/data/freiburg/*.png";
 
 void run_locally(std::string path) {
 
@@ -54,6 +54,8 @@ void run_locally(std::string path) {
         
         MatchesHolder match_holder = matcher.run(prev_image, next_image);
         INFOLOG("Detected %d features.", match_holder.good_matches.size());
+        matcher.display_matches(prev_image, next_image, match_holder);
+        image_list[i - 1].clear_image_data();
         image_list.emplace_back(next_image);
     }
 }
