@@ -15,8 +15,8 @@
 using namespace std; 
 using namespace vstk;
 
-const std::string working_dir = "/home/gjs/software/3D_Indexer/data/";
-const std::string im_pattens = "/home/gjs/software/vstk/data/freiburg/*.png";
+const std::string working_dir = "/home/gjs/software/vstk/data/";
+const std::string im_pattens = "/home/gjs/Documents/ImageData/freiburg/*.png";
 
 void run_locally(std::string path) {
 
@@ -24,7 +24,7 @@ void run_locally(std::string path) {
     conf.set_run_data_dir(path);
     conf.set_feature_extraction_algo(vstk::FExtractionAlgorithm::FAST);
     conf.set_descriptor_compute_algo(vstk::DComputeAlgorithm::ORB);
-    conf.set_match_algo(vstk::MatchAlgorithm::BF);
+    conf.set_match_algo(vstk::MatchAlgorithm::BF_HAMMING);
 
     DBGLOG(
         "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n=========================================================\n", 
@@ -54,7 +54,11 @@ void run_locally(std::string path) {
         
         MatchesHolder match_holder = matcher.run(prev_image, next_image);
         INFOLOG("Detected %d features.", match_holder.good_matches.size());
-        matcher.display_matches(prev_image, next_image, match_holder);
+        if(match_holder.good_matches.size() == 0) {
+            WARNLOG("No good quality matches, rejecting image pair");
+            continue;
+        }
+        matcher.display_match_overlap(prev_image, next_image, match_holder);
         image_list[i - 1].clear_image_data();
         image_list.emplace_back(next_image);
     }

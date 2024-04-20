@@ -24,10 +24,16 @@ namespace vstk {
         vstk::VstkConfig config;
 
         void lowe_threshold(MatchesHolder &holder);
+        void filter_ransac(MatchesHolder &holder, ImageContextHolder image1_ctx, ImageContextHolder image2_ctx);
+        void filter_homography(MatchesHolder &holder, ImageContextHolder image1_ctx, ImageContextHolder image2_ctx);
+        void symmetry_test(std::vector<cv::DMatch> match12, std::vector<cv::DMatch> match21, std::vector<cv::DMatch> &sym_matches);
+        bool is_matches_valid(MatchesHolder holder);
     public:
         FeatureMatcher(vstk::VstkConfig config);
         MatchesHolder run(ImageContextHolder &image1_ctx, ImageContextHolder &image2_ctx);
+        MatchesHolder run_symmetric(ImageContextHolder &image1_ctx, ImageContextHolder &image2_ctx);
         void display_matches(ImageContextHolder image1_ctx, ImageContextHolder image2_ctx, MatchesHolder holder);
+        void display_match_overlap(ImageContextHolder current_image, ImageContextHolder prev_image, MatchesHolder holder);
     };
     
 }
