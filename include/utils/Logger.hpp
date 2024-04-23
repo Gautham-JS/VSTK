@@ -14,6 +14,9 @@
 namespace vstk {
     
     class Logger {
+        private:
+            bool is_debug = false;
+
         protected:
             Logger() {}
 
@@ -22,8 +25,17 @@ namespace vstk {
                 static Logger logger;
                 return logger;
             }
+
             Logger(Logger &other) = delete;
             void operator=(const Logger &) = delete;
+
+            void enable_debug() {
+                is_debug = true; 
+            }
+
+            void disable_debug() {
+                is_debug = false; 
+            }
 
             template<typename... Arguments>
             void log_info(const std::string& fmt, const Arguments&... args) {
@@ -32,6 +44,9 @@ namespace vstk {
             }
             template<typename... Arguments>
             void log_debug(const std::string& fmt, const Arguments&... args) {
+                if(!is_debug) {
+                    return;
+                }
                 auto fmtMsg = boost::str((boost::format(fmt) % ... % args));
                 BOOST_LOG_TRIVIAL(debug) << fmtMsg;
             }

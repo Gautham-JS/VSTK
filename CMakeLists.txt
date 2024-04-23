@@ -131,12 +131,15 @@ target_link_libraries(config_vstk  ${Boost_LIBRARIES})
 add_library(
     io_vstk SHARED
     src/io/DiskIO.cpp
+    src/io/Serializer.cpp
 )
+
 target_link_libraries(io_vstk  ${Boost_LIBRARIES})
 
 add_library(
     utils_vstk SHARED
     src/utils/ObjectLifecycle.cpp
+    src/utils/TimerUtils.cpp
 )
 target_link_libraries(utils_vstk  ${Boost_LIBRARIES})
 

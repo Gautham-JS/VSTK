@@ -6,7 +6,8 @@
                 "${default}",
                 "${workspaceFolder}/thirdparty/grpc/grpc/third_party/protobuf/src",
                 "${workspaceFolder}/thirdparty/grpc/grpc/third_party/abseil-cpp",
-                "${workspaceFolder}/thirdparty/grpc/grpc/include"
+                "${workspaceFolder}/thirdparty/grpc/grpc/include",
+                "${workspaceFolder}/protos"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

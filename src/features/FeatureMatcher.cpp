@@ -18,10 +18,17 @@ FeatureMatcher::FeatureMatcher(vstk::VstkConfig config) : config(config) {
             break;
         case vstk::MatchAlgorithm::FLANN :
             matcher_enum = cv::DescriptorMatcher::FLANNBASED;
+            
         default:
             break;
     }
-    matcher = cv::DescriptorMatcher::create(matcher_enum);
+    if(config.get_descriptor_compute_algo() == vstk::DComputeAlgorithm::ORB && matcher_enum == cv::DescriptorMatcher::FLANNBASED) {
+        cv::Ptr flannParams = cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2);
+        matcher = cv::makePtr<cv::FlannBasedMatcher>(cv::FlannBasedMatcher(flannParams));
+    }
+    else{
+        matcher = cv::DescriptorMatcher::create(matcher_enum);
+    }
 }
 
 void FeatureMatcher::lowe_threshold(MatchesHolder &holder) {
@@ -36,13 +43,13 @@ void FeatureMatcher::lowe_threshold(MatchesHolder &holder) {
         ERRORLOG("No matches/good matches found!");
     }
     double good_pct = ((good_matches.size() / holder.knn_matches.size()) * 100);
-    INFOLOG("[Lowe's Ratio Filter] Original Matches : %ld | Filtered Matches : %ld | Filtration Percentage : %f", holder.knn_matches.size(), good_matches.size(), good_pct);
+    DBGLOG("[Lowe's Ratio Filter] Original Matches : %ld | Filtered Matches : %ld | Filtration Percentage : %f", holder.knn_matches.size(), good_matches.size(), good_pct);
     holder.good_matches = good_matches;
 }
 
 
 MatchesHolder FeatureMatcher::run(ImageContextHolder &image1_ctx, ImageContextHolder &image2_ctx) {
-    INFOLOG("Running matcher for images");
+    DBGLOG("Running matcher for images");
     MatchesHolder holder;
     holder.im1_id = image1_ctx.get_image_id();
     holder.im2_id = image2_ctx.get_image_id();
@@ -60,7 +67,7 @@ MatchesHolder FeatureMatcher::run(ImageContextHolder &image1_ctx, ImageContextHo
 }
 
 MatchesHolder FeatureMatcher::run_symmetric(ImageContextHolder &image1_ctx, ImageContextHolder &image2_ctx) {
-    INFOLOG("Running symmetric matcher for images\n");
+    DBGLOG("Running symmetric matcher for images\n");
     MatchesHolder holder12, holder21, symmetric_holder;
     std::mutex mtx;
     bool ready = false;
@@ -102,18 +109,24 @@ MatchesHolder FeatureMatcher::run_symmetric(ImageContextHolder &image1_ctx, Imag
 void FeatureMatcher::display_match_overlap(ImageContextHolder current_image, ImageContextHolder prev_image, MatchesHolder holder) {
     cv::Mat joined;
     cv::Mat img = current_image.get_image().clone();
-    cv::drawKeypoints(img, current_image.get_features_holder().kps, img, cv::Scalar(255, 0, 0), cv::DrawMatchesFlags::DEFAULT);
+    cv::Mat img_delta = img.clone();
+    //cv::drawKeypoints(img, current_image.get_features_holder().kps, img, cv::Scalar(255, 0, 0), cv::DrawMatchesFlags::DEFAULT);
     for(int i=0; i<holder.good_matches.size(); i++) {
         cv::DMatch match_pt = holder.good_matches[i];
         int ic = match_pt.queryIdx;
         int ip = match_pt.trainIdx;
         cv::KeyPoint kpc = current_image.get_features_holder().kps[ic];
         cv::KeyPoint kpp = prev_image.get_features_holder().kps[ip];
-        cv::drawMarker(img, kpc.pt, cv::Scalar(0, 255, 0), cv::MarkerTypes::MARKER_CROSS, 15, 1);
-        cv::drawMarker(img, kpp.pt, cv::Scalar(0, 255, 0), cv::MarkerTypes::MARKER_CROSS, 15, 1);
-        cv::line(img, kpc.pt, kpp.pt, cv::Scalar(0, 255, 255), 2, cv::LineTypes::LINE_4);
+        cv::drawMarker(img, kpc.pt, cv::Scalar(0, 255, 0), cv::MarkerTypes::MARKER_CROSS, 20, 1);
+
+        cv::drawMarker(img_delta, kpc.pt, cv::Scalar(0, 255, 0), cv::MarkerTypes::MARKER_TILTED_CROSS, 20, 1);
+        cv::drawMarker(img_delta, kpp.pt, cv::Scalar(255, 0, 0), cv::MarkerTypes::MARKER_TILTED_CROSS, 20, 1);
+        cv::line(img_delta, kpc.pt, kpp.pt, cv::Scalar(0, 255, 255), 2, cv::LineTypes::LINE_AA);
     }
-    cv::hconcat(current_image.get_image(), img, joined);
+    cv::Mat curr_image_data = current_image.get_image();
+    cv::putText(curr_image_data, "Original Image", cv::Point(0, 0), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 255, 255), 1);
+    cv::hconcat(curr_image_data, img, img);
+    cv::hconcat(img, img_delta ,joined);
     cv::imshow("FLANN Matches", joined);
     int key = (cv::waitKey(1) & 0xFF);
     if(key == 'q') {

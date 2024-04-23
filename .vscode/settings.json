@@ -82,6 +82,8 @@
         "future": "cpp",
         "scoped_allocator": "cpp",
         "shared_mutex": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "coroutine": "cpp",
+        "source_location": "cpp"
     }
 }

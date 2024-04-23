@@ -29,7 +29,8 @@ namespace vstk {
 
     enum class DComputeAlgorithm {
         ORB,
-        SIFT
+        SIFT,
+        BRIEF
     };
 
     

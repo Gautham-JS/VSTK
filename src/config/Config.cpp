@@ -97,6 +97,10 @@ std::string vstk::enum_to_str(DComputeAlgorithm algo) {
     case DComputeAlgorithm::SIFT :
         str = "SIFT";
         break;
+    case DComputeAlgorithm::BRIEF :
+        str = "BRIEF";
+        break;
+
     default:
         str = "Unknown";
         break;

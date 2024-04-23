@@ -35,6 +35,11 @@ namespace vstk {
         cv::Mat descriptors;
     } FeaturesHolder;
 
+    typedef struct ImageFeaturePt {
+        int num_views;
+        cv::KeyPoint kp;
+    } ImageFeaturePt;
+
     class ImageContextHolder {
         private:
             std::string image_id;

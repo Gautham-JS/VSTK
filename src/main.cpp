@@ -9,6 +9,8 @@
 #include "utils/Logger.hpp"
 #include "config/Config.hpp"
 #include "io/DiskIO.hpp"
+#include "io/Serializer.hpp"
+#include "utils/TimerUtils.hpp"
 
 
 
@@ -17,6 +19,20 @@ using namespace vstk;
 
 const std::string working_dir = "/home/gjs/software/vstk/data/";
 const std::string im_pattens = "/home/gjs/Documents/ImageData/freiburg/*.png";
+
+
+void load_and_publish_image(std::string path, vstk::VstkConfig conf) {
+    FeatureExtractor extractor(conf);
+    Serializer serializer;
+    DiskIO disk_io(working_dir, "matches");
+    vector<string> files = disk_io.list_directory(path);
+    for(int i=0; i<files.size(); i++) {
+        ImageContextHolder ictx(files[i]);
+        extractor.run_sift(ictx);
+        vstk::BinaryDataStream *data = serializer.serialize(ictx);
+        cerr << i << " : " <<data->data << endl;
+    }
+}
 
 void run_locally(std::string path) {
 
@@ -33,34 +49,56 @@ void run_locally(std::string path) {
         vstk::enum_to_str(conf.get_match_algorithm())
     );
 
+    load_and_publish_image(path, conf);
+    exit(-1);
+
 
     DiskIO disk_io(working_dir, "matches");
     vector<string> files = disk_io.list_directory(path);
     vector<ImageContextHolder> image_list;
     
+    Timer t_main = get_timer("Main");
     ImageContextHolder image(files[0]);
     FeatureExtractor extractor(conf);
     FeatureMatcher matcher(conf);
+    Serializer serializer;
 
     extractor.run_sift(image);
-    INFOLOG("Initial features : %d, Descriptors : %d", image.get_features_holder().kps.size(), image.get_features_holder().descriptors.size());
+    DBGLOG("Initial features : %d, Descriptors : %d", image.get_features_holder().kps.size(), image.get_features_holder().descriptors.size());
     image_list.push_back(image);
+    int cur_ptr = 1;
+    int prev_ptr = 0;
 
-    for (int i=1; i<files.size(); i++) {
-        INFOLOG("Loading image [ %d / %d ]", i, files.size() - 1);
-        ImageContextHolder prev_image = image_list[i - 1];        
-        ImageContextHolder next_image(files[i]);
-        extractor.run_sift(next_image);
+    while (cur_ptr < files.size()) {
+        start_timer(t_main);
+        INFOLOG("Loading image [ %d / %d ]", cur_ptr, files.size() - 1);
+        DBGLOG("Prev PTR : %d, Cur PTR : %d", prev_ptr, cur_ptr);
         
-        MatchesHolder match_holder = matcher.run(prev_image, next_image);
-        INFOLOG("Detected %d features.", match_holder.good_matches.size());
+        ImageContextHolder prev_image = image_list[prev_ptr];        
+        ImageContextHolder curr_image(files[cur_ptr]);
+        extractor.run_sift(curr_image);
+        MatchesHolder match_holder = matcher.run(curr_image, prev_image);
+        DBGLOG("Detected %d features.", match_holder.good_matches.size());
+
         if(match_holder.good_matches.size() == 0) {
             WARNLOG("No good quality matches, rejecting image pair");
+            cur_ptr++;
             continue;
         }
-        matcher.display_match_overlap(prev_image, next_image, match_holder);
-        image_list[i - 1].clear_image_data();
-        image_list.emplace_back(next_image);
+        matcher.display_match_overlap(curr_image, prev_image, match_holder);
+        if(match_holder.good_matches.size() > 40) {
+            INFOLOG("[SKIP] Tracking quality way too good, ommiting current frame due to insignificant motion.");
+            curr_image.clear_image_data();
+        }
+        else {
+            INFOLOG("[INSERT] Diminishing match quantity, inserting reference image & clearing image %d from memory", prev_ptr);
+            image_list[prev_ptr].clear_image_data();
+            image_list.emplace_back(curr_image);
+            prev_ptr++;
+        }
+        end_timer(t_main);
+        log_fps(t_main, stdout);
+        cur_ptr++;
     }
 }
 
@@ -83,6 +121,7 @@ void bindToGRPC(std::string addr) {
 }
 
 int main(int argc, char** argv ) {
+    //vstk::Logger::get().enable_debug();
     run_locally(im_pattens);
     //bindToGRPC("localhost:34015");
     return 0;
