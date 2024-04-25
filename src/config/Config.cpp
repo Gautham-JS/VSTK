@@ -69,6 +69,14 @@ MatchAlgorithm VstkConfig::get_match_algorithm() {
     return this->match_algo;
 }
 
+void vstk::VstkConfig::set_num_features_retained(int num_features) {
+    this->num_features_retained = num_features;
+}
+
+int vstk::VstkConfig::get_num_features_retained() {
+    return this->num_features_retained;
+}
+
 std::string vstk::enum_to_str(vstk::FExtractionAlgorithm algo) {
     std::string str;
     switch (algo) {

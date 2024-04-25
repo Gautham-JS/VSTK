@@ -18,7 +18,7 @@ using namespace std;
 using namespace vstk;
 
 const std::string working_dir = "/home/gjs/software/vstk/data/";
-const std::string im_pattens = "/home/gjs/Documents/ImageData/freiburg/*.png";
+const std::string im_pattens = "/home/gjs/Documents/data/Freiburg/Large/rgb/*.png";
 
 
 void load_and_publish_image(std::string path, vstk::VstkConfig conf) {
@@ -28,7 +28,7 @@ void load_and_publish_image(std::string path, vstk::VstkConfig conf) {
     vector<string> files = disk_io.list_directory(path);
     for(int i=0; i<files.size(); i++) {
         ImageContextHolder ictx(files[i]);
-        extractor.run_sift(ictx);
+        extractor.run(ictx);
         vstk::BinaryDataStream *data = serializer.serialize(ictx);
         cerr << i << " : " <<data->data << endl;
     }
@@ -38,9 +38,10 @@ void run_locally(std::string path) {
 
     VstkConfig conf;
     conf.set_run_data_dir(path);
+    conf.set_num_features_retained(5000);
     conf.set_feature_extraction_algo(vstk::FExtractionAlgorithm::FAST);
     conf.set_descriptor_compute_algo(vstk::DComputeAlgorithm::ORB);
-    conf.set_match_algo(vstk::MatchAlgorithm::BF_HAMMING);
+    conf.set_match_algo(vstk::MatchAlgorithm::FLANN);
 
     DBGLOG(
         "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n=========================================================\n", 
@@ -49,8 +50,8 @@ void run_locally(std::string path) {
         vstk::enum_to_str(conf.get_match_algorithm())
     );
 
-    load_and_publish_image(path, conf);
-    exit(-1);
+    // load_and_publish_image(path, conf);
+    // exit(-1);
 
 
     DiskIO disk_io(working_dir, "matches");
@@ -63,7 +64,7 @@ void run_locally(std::string path) {
     FeatureMatcher matcher(conf);
     Serializer serializer;
 
-    extractor.run_sift(image);
+    extractor.run(image);
     DBGLOG("Initial features : %d, Descriptors : %d", image.get_features_holder().kps.size(), image.get_features_holder().descriptors.size());
     image_list.push_back(image);
     int cur_ptr = 1;
@@ -76,7 +77,7 @@ void run_locally(std::string path) {
         
         ImageContextHolder prev_image = image_list[prev_ptr];        
         ImageContextHolder curr_image(files[cur_ptr]);
-        extractor.run_sift(curr_image);
+        extractor.run(curr_image);
         MatchesHolder match_holder = matcher.run(curr_image, prev_image);
         DBGLOG("Detected %d features.", match_holder.good_matches.size());
 

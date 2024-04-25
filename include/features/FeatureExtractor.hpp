@@ -72,7 +72,7 @@ namespace vstk {
 
         public:
             explicit FeatureExtractor(VstkConfig config);
-            FeaturesHolder run_sift(ImageContextHolder &image_ctx);
+            FeaturesHolder run(ImageContextHolder &image_ctx);
             void display_features(ImageContextHolder image_ctx);
     };
 }

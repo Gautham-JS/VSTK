@@ -56,6 +56,27 @@ message UploadImageResponse {
   optional string error_message = 5;
 }
 
+message StartImageStream {
+  string src_type = 1;
+  string topic_prefix = 2;
+  optional string topic_name = 3;
+
+}
+
+message GetImageRequest {
+  string image_id = 1;
+  string topic_prefix = 2;
+  optional string topic_name = 3;
+}
+
+message GetImageResponse {
+  string image_id = 1;
+  uint32 status = 2;
+  optional string topic_name = 3;
+}
+
+
+
 service X3DSService {
   rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse) {};
   rpc ManageExchange(ManageExchangeRequest) returns (ManageExchangeResponse) {};

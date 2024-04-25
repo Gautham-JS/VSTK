@@ -36,6 +36,7 @@ namespace vstk {
     
     class VstkConfig {
         private:
+            int num_features_retained = 5000;
             RunType run_type;
             LoadScheme load_scheme;
 
@@ -59,11 +60,13 @@ namespace vstk {
             void set_feature_extraction_algo(FExtractionAlgorithm algorithm);
             void set_descriptor_compute_algo(DComputeAlgorithm algorithm);
             void set_match_algo(MatchAlgorithm algorithm);
+            void set_num_features_retained(int num_features);
 
             RunType get_run_type();
             LoadScheme get_load_scheme();
             std::string get_working_dir();
             std::string get_run_data_dir();
+            int get_num_features_retained();
 
             FExtractionAlgorithm get_feature_extraction_algo();
             DComputeAlgorithm get_descriptor_compute_algo();

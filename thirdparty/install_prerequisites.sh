@@ -23,6 +23,7 @@ function grpc_deps() {
 	run_cmd "sudo apt-get install -y libgflags-dev libgtest-dev"
 	run_cmd "sudo apt-get install -y clang libc++-dev"
 	run_cmd "sudo apt-get install -y libboost-all-dev"
+	run_cmd "sudo apt-get install -y librdkafka-dev"
 }
 
 

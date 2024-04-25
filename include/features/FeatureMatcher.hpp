@@ -26,6 +26,7 @@ namespace vstk {
         void lowe_threshold(MatchesHolder &holder);
         void filter_ransac(MatchesHolder &holder, ImageContextHolder image1_ctx, ImageContextHolder image2_ctx);
         void filter_homography(MatchesHolder &holder, ImageContextHolder image1_ctx, ImageContextHolder image2_ctx);
+        void filter_grid_motion_stats(MatchesHolder &holder, ImageContextHolder image1_ctx, ImageContextHolder image2_ctx);
         void symmetry_test(std::vector<cv::DMatch> match12, std::vector<cv::DMatch> match21, std::vector<cv::DMatch> &sym_matches);
         bool is_matches_valid(MatchesHolder holder);
     public:

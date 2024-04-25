@@ -91,13 +91,14 @@ void ImageContextHolder::clear_image_data() {
 }
 
 
-FeaturesHolder FeatureExtractor::run_sift(ImageContextHolder& image_ctx) {
+FeaturesHolder FeatureExtractor::run(ImageContextHolder& image_ctx) {
     INFOLOG("Running feature extract and compute engines");
     FeaturesHolder feature_holder;
     this->fextract->detect(
         image_ctx.get_image(), 
         feature_holder.kps
     );
+    cv::KeyPointsFilter::retainBest(feature_holder.kps, config.get_num_features_retained());
     this->fcompute->compute(
         image_ctx.get_image(), 
         feature_holder.kps,
@@ -131,7 +132,7 @@ FeatureExtractor::FeatureExtractor(vstk::VstkConfig config) : config(config) {
             this->fextract = cv::ORB::create();
             break;
         case vstk::FExtractionAlgorithm::SIFT :
-            this->fextract = cv::SIFT::create();
+            this->fextract = cv::SIFT::create(500);
         default:
             this->fextract = cv::FastFeatureDetector::create();
             break;
