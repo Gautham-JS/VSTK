@@ -1,0 +1,21 @@
+[project]
+name = "vstk"
+version = "0.1"
+description = "Sample pluggable toolkit for VSIUAL SLAM"
+authors = ["Gautham JS"]
+platforms = ["linux-64"]
+channels = ["conda-forge"]
+
+[tasks]
+install_prereqs = { cmd = ["/bin/bash", "./thirdparty/install_prerequisites.sh"] }
+
+build_prereq = { cmd = ["/bin/bash", "./thirdparty/build_thirdparty.sh", "install"], depends_on = ["install_prereqs"] }
+
+create_build_dir = { cmd = ["mkdir", "-p", "./build"] }
+
+configure = { cmd = ["cmake", ".."], cwd = "build", depends_on = ["create_build_dir"] }
+
+compile = { cmd = ["make", "-j", "15"], cwd = "build", depends_on = ["configure"] }
+
+vstk = { cmd = ["./bin/vstk"], cwd = "build"}
+
