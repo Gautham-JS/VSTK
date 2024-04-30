@@ -16,7 +16,9 @@ set (OPENCV_EXTRA_MODULES_PATH ${CMAKE_SOURCE_DIR}/thirdparty/opencv/opencv_cont
 set (BUILD_SHARED_LIBS ON)
 
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/grpc/grpc/ ${CMAKE_BINARY_DIR}/thirdparty/grpc/)
+message("${CMAKE_SOURCE_DIR}/thirdparty/grpc/grpc/")
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/grpc/grpc/)
 
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/")
@@ -140,6 +142,7 @@ add_library(
     utils_vstk SHARED
     src/utils/ObjectLifecycle.cpp
     src/utils/TimerUtils.cpp
+    src/utils/CvUtils.cpp
 )
 target_link_libraries(utils_vstk  ${Boost_LIBRARIES})
 

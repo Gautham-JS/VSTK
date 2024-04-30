@@ -2,6 +2,7 @@
 #include <opencv2/core.hpp>
 #include <memory.h>
 #include <string.h>
+#include <utility>
 
 #include "config/Config.hpp"
 #include "utils/Logger.hpp"
@@ -40,6 +41,8 @@ namespace vstk {
         cv::KeyPoint kp;
     } ImageFeaturePt;
 
+
+
     class ImageContextHolder {
         private:
             std::string image_id;
@@ -47,6 +50,7 @@ namespace vstk {
             uint32_t image_length;
             uint32_t image_width;
             FeaturesHolder holder;
+
 
             void init();
         public:
@@ -64,16 +68,44 @@ namespace vstk {
             void load_image_data(unsigned char *image_data, uint32_t image_length, uint32_t image_width);
     };
 
+    class AdaptiveFastExtractor {
+        private:
+            std::pair<int, int> cell_size;
+            size_t n_min, n_max;
+            size_t nc_min, nc_max;
+            int fth_min, fth_max, th_step;
+            std::vector<cv::Ptr<cv::Feature2D>> detectors;
+            std::vector<int> thresholds;
+            void extract_internal(cv::Mat image, std::vector<cv::KeyPoint> &kps, int cell_idx, std::pair<int, int> origin);
+            void down_step_threshold(int cell_idx);
+            void up_step_threshold(int cell_idx);
+        public:
+            AdaptiveFastExtractor(int n_min, int n_max, int cells_x, int cells_y);
+            FeaturesHolder extract(ImageContextHolder &image);
+    };
+
     class FeatureExtractor {  
         private:
             cv::Ptr<cv::Feature2D> fextract;
             cv::Ptr<cv::Feature2D> fcompute;
             VstkConfig config;
+            uint32_t fast_threshold = 40;
+            uint32_t min_features = 200;
+            uint32_t max_features = 700;
+            uint32_t p_fast_threshold = 40;
+            
+            AdaptiveFastExtractor *adaptive_extractor;
+
+            
+
+            FeaturesHolder run_internal(ImageContextHolder &image_ctx);
 
         public:
             explicit FeatureExtractor(VstkConfig config);
             FeaturesHolder run(ImageContextHolder &image_ctx);
+            FeaturesHolder run_adaptive(ImageContextHolder &image_ctx, int r_depth);
             void display_features(ImageContextHolder image_ctx);
+            void reset();
     };
 }
 

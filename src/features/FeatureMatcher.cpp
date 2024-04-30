@@ -23,8 +23,11 @@ FeatureMatcher::FeatureMatcher(vstk::VstkConfig config) : config(config) {
             break;
     }
     if(config.get_descriptor_compute_algo() == vstk::DComputeAlgorithm::ORB && matcher_enum == cv::DescriptorMatcher::FLANNBASED) {
-        cv::Ptr flannParams = cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2);
-        matcher = cv::makePtr<cv::FlannBasedMatcher>(cv::FlannBasedMatcher(flannParams));
+        matcher = cv::makePtr<cv::FlannBasedMatcher>(
+            cv::FlannBasedMatcher(
+                cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2)
+            )
+        );
     }
     else{
         matcher = cv::DescriptorMatcher::create(matcher_enum);
@@ -35,6 +38,9 @@ void FeatureMatcher::lowe_threshold(MatchesHolder &holder) {
     const float ratio = 0.7f;
     std::vector<cv::DMatch> good_matches;
     for(int i=0; i<holder.knn_matches.size(); i++) {
+        if(holder.knn_matches[i].size() < 2) {
+            continue;
+        }
         if (holder.knn_matches[i][0].distance < holder.knn_matches[i][1].distance * ratio) {
             good_matches.emplace_back(holder.knn_matches[i][0]);
         }
@@ -178,7 +184,7 @@ void FeatureMatcher::filter_ransac(MatchesHolder &holder, ImageContextHolder ima
     }
 
     std::vector<uchar> inliers(p1.size(),0);
-    cv::Mat f_matrix = cv::findFundamentalMat(cv::Mat(p1), cv::Mat(p2), inliers,cv::RANSAC, 5, 0.99);
+    cv::Mat f_matrix = cv::findFundamentalMat(p1, p2, inliers, cv::RANSAC, 3, 0.99);
     
     auto inlier_iterator = inliers.begin();
     auto match_iterator = holder.good_matches.begin();

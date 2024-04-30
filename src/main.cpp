@@ -18,7 +18,7 @@ using namespace std;
 using namespace vstk;
 
 const std::string working_dir = "/home/gjs/software/vstk/data/";
-const std::string im_pattens = "/home/gjs/Documents/data/Freiburg/Large/rgb/*.png";
+const std::string im_pattens = "/media/gjs/Windows-SSD/Data/TUM/dataset-outdoors3_512_16/mav0/cam0/data/*.png";
 
 
 void load_and_publish_image(std::string path, vstk::VstkConfig conf) {
@@ -39,7 +39,7 @@ void run_locally(std::string path) {
     VstkConfig conf;
     conf.set_run_data_dir(path);
     conf.set_num_features_retained(5000);
-    conf.set_feature_extraction_algo(vstk::FExtractionAlgorithm::FAST);
+    conf.set_feature_extraction_algo(vstk::FExtractionAlgorithm::ADAPTIVE_FAST);
     conf.set_descriptor_compute_algo(vstk::DComputeAlgorithm::ORB);
     conf.set_match_algo(vstk::MatchAlgorithm::FLANN);
 
@@ -122,7 +122,7 @@ void bindToGRPC(std::string addr) {
 }
 
 int main(int argc, char** argv ) {
-    //vstk::Logger::get().enable_debug();
+    vstk::Logger::get().enable_debug();
     run_locally(im_pattens);
     //bindToGRPC("localhost:34015");
     return 0;

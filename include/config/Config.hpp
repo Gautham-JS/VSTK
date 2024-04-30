@@ -24,7 +24,9 @@ namespace vstk {
     enum class FExtractionAlgorithm {
         ORB,
         FAST,
-        SIFT
+        ADAPTIVE_FAST,
+        SIFT,
+        ORB_SLAM_ORB
     };
 
     enum class DComputeAlgorithm {
