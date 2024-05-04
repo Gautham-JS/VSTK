@@ -1,5 +1,6 @@
 #include "protoimpl/ImageSvc.hpp"
 
+#ifdef VSTK_TRANSPORT_PROTO_GRPC
 
 using namespace vstk;
 
@@ -47,3 +48,5 @@ grpc::Status ImageSvc::ManageExchange(grpc::ServerContext* context, const Manage
     log_manage_exchange_req(*request);
     return grpc::Status::OK;
 }
+
+#endif

@@ -1,16 +1,21 @@
 #include <stdio.h>
-#include "opencv2/opencv.hpp"
-#include "grpcpp/grpcpp.h"
+#include <stdlib.h>
+#include <getopt.h>
 
+#include "opencv2/opencv.hpp"
 
 #include "features/FeatureExtractor.hpp"
 #include "features/FeatureMatcher.hpp"
-#include "protoimpl/ImageSvc.hpp"
 #include "utils/Logger.hpp"
 #include "config/Config.hpp"
 #include "io/DiskIO.hpp"
 #include "io/Serializer.hpp"
 #include "utils/TimerUtils.hpp"
+
+#ifdef VSTK_TRANSPORT_PROTO_GRPC
+    #include "grpcpp/grpcpp.h"
+    #include "protoimpl/ImageSvc.hpp"
+#endif
 
 
 
@@ -34,14 +39,7 @@ void load_and_publish_image(std::string path, vstk::VstkConfig conf) {
     }
 }
 
-void run_locally(std::string path) {
-
-    VstkConfig conf;
-    conf.set_run_data_dir(path);
-    conf.set_num_features_retained(5000);
-    conf.set_feature_extraction_algo(vstk::FExtractionAlgorithm::ADAPTIVE_FAST);
-    conf.set_descriptor_compute_algo(vstk::DComputeAlgorithm::ORB);
-    conf.set_match_algo(vstk::MatchAlgorithm::FLANN);
+void run_locally(VstkConfig conf) {
 
     DBGLOG(
         "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n=========================================================\n", 
@@ -55,7 +53,7 @@ void run_locally(std::string path) {
 
 
     DiskIO disk_io(working_dir, "matches");
-    vector<string> files = disk_io.list_directory(path);
+    vector<string> files = disk_io.list_directory(conf.get_run_data_src());
     vector<ImageContextHolder> image_list;
     
     Timer t_main = get_timer("Main");
@@ -104,26 +102,126 @@ void run_locally(std::string path) {
 }
 
 void bindToGRPC(std::string addr) {
+    #ifdef VSTK_TRANSPORT_PROTO_GRPC
+        INFOLOG("Attempting to bind using grpc to address %s", addr.c_str());
+        ImageSvc image_service;
+        grpc::ServerBuilder server_builder;
+        INFOLOG("Server binding");
+        server_builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
+        INFOLOG("Registering service");
+        server_builder.RegisterService(&image_service);
+        INFOLOG("Calling build and start");
+        auto server = server_builder.BuildAndStart();
+        INFOLOG("Server listening...");
 
-    INFOLOG("Attempting to bind using grpc to address %s", addr.c_str());
-    ImageSvc image_service;
-    grpc::ServerBuilder server_builder;
-    INFOLOG("Server binding");
-    server_builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
-    INFOLOG("Registering service");
-    server_builder.RegisterService(&image_service);
-    INFOLOG("Calling build and start");
-    auto server = server_builder.BuildAndStart();
-    INFOLOG("Server listening...");
+        server->Wait();
 
-    server->Wait();
+        INFOLOG("Shut down server");
+    #else
+        ERRORLOG("VSTK is not compiled with gRPC transport layer, exitting.");
+        exit(-1);
+    #endif
+}
 
-    INFOLOG("Shut down server");
+void print_usage_and_unalive(char *prog_name) {
+    fprintf(stderr, "%s data_source <args>\n", prog_name);
+    exit(EXIT_FAILURE);
+}
+
+
+vstk::VstkConfig build_config_from_args(int argc, char**argv) {
+    vstk::VstkConfig conf;
+    std::string data_src;
+    std::string slam_type;
+    std::string f_algorithm;
+    vstk::FExtractionAlgorithm f_algorithm_enum = vstk::FExtractionAlgorithm::ADAPTIVE_FAST;
+    std::string d_algorithm;
+    vstk::DComputeAlgorithm d_compute_algorithm_enum = vstk::DComputeAlgorithm::ORB;
+    std::string m_algorithm;
+    vstk::MatchAlgorithm m_algorithm_enum = vstk::MatchAlgorithm::FLANN;
+    std::string config_file_path = "";
+    char c;
+    opterr = 0;
+
+    while ((c = getopt (argc, argv, "f:d:c:t:m:v")) != -1) {
+        switch (c) {
+            case 'f':
+                f_algorithm = std::string(optarg);
+                for (auto & ch: f_algorithm) ch = toupper(ch);
+
+                if(f_algorithm == "ADA_FAST")       f_algorithm_enum = vstk::FExtractionAlgorithm::ADAPTIVE_FAST;
+                if(f_algorithm == "FAST")           f_algorithm_enum = vstk::FExtractionAlgorithm::FAST;
+                if(f_algorithm == "ORB")            f_algorithm_enum = vstk::FExtractionAlgorithm::ORB;
+                if(f_algorithm == "SIFT")           f_algorithm_enum = vstk::FExtractionAlgorithm::SIFT;
+                break;
+
+            case 'd':
+                d_algorithm = std::string(optarg);
+                for (auto & ch: d_algorithm) ch = toupper(ch);
+
+                if(d_algorithm == "ORB")            d_compute_algorithm_enum = vstk::DComputeAlgorithm::ORB;
+                if(d_algorithm == "BRIEF")          d_compute_algorithm_enum = vstk::DComputeAlgorithm::BRIEF;
+                if(d_algorithm == "SIFT")           d_compute_algorithm_enum = vstk::DComputeAlgorithm::SIFT;
+                break;
+            
+            case 'm':
+                m_algorithm = std::string(optarg);
+                for (auto & ch: m_algorithm) ch = toupper(ch);
+
+                if(m_algorithm == "FLANN")          m_algorithm_enum = vstk::MatchAlgorithm::FLANN;
+                if(m_algorithm == "BF")             m_algorithm_enum = vstk::MatchAlgorithm::BF;
+                if(m_algorithm == "BF_HAMMING")     m_algorithm_enum = vstk::MatchAlgorithm::BF_HAMMING;
+                break;
+
+            case 'v':
+                vstk::Logger::get().enable_debug();
+                break;
+
+            case 'c':
+                config_file_path = std::string(optarg);
+                break;
+
+            default:
+                ERRORLOG("Unknwon option");
+                abort ();
+        }
+    }
+    
+    if(argc - optind < 1) {
+        ERRORLOG("Directory not specified");
+        print_usage_and_unalive(argv[0]);
+    }
+    data_src = std::string(argv[optind]);
+
+    if(argc - optind == 2) {
+        slam_type = argv[optind];
+        for (auto & ch: m_algorithm) ch = toupper(ch);
+
+        if(slam_type == "MONO") conf.set_slam_type(vstk::SLAMType::MONO);
+        if(slam_type == "STEREO") conf.set_slam_type(vstk::SLAMType::STEREO);
+        if(slam_type == "RGBD") conf.set_slam_type(vstk::SLAMType::RGBD);
+    }
+    else {
+        conf.set_slam_type(vstk::SLAMType::STEREO);
+    }
+    conf.set_run_data_src(data_src);
+    conf.set_feature_extraction_algo(f_algorithm_enum);
+    conf.set_descriptor_compute_algo(d_compute_algorithm_enum);
+    conf.set_working_dir(working_dir);
+    conf.set_match_algo(m_algorithm_enum);
+
+    return conf;
 }
 
 int main(int argc, char** argv ) {
-    vstk::Logger::get().enable_debug();
-    run_locally(im_pattens);
+
+    int aflag = 0;
+    int bflag = 0;
+    char *cvalue = NULL;
+    int index;
+    int c;
+    vstk::VstkConfig conf = build_config_from_args(argc, argv);
+    run_locally(conf);
     //bindToGRPC("localhost:34015");
-    return 0;
+    return EXIT_SUCCESS;
 }

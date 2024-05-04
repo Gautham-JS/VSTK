@@ -10,6 +10,8 @@ namespace vstk {
     std::vector<cv::Mat> split_image( cv::Mat & image, int M, int N );
     std::vector<cv::Mat> split_image( cv::Mat & image, int M, int N , std::vector<std::pair<int, int>> &origins);
 
+    cv::Mat undistort_image(cv::Mat image, cv::Mat camera_matrix);
+
 }
 
 #endif

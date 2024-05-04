@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#ifdef VSTK_TRANSPORT_PROTO_GRPC
 #include "utils/Logger.hpp"
 #include "image_svc.grpc.pb.h"
 #include "image_svc.pb.h"
@@ -16,6 +17,6 @@ namespace vstk {
     };
 
 }
-
+#endif
 
 #endif

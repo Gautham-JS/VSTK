@@ -96,6 +96,33 @@ struct UploadImageRequestDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 UploadImageRequestDefaultTypeInternal _UploadImageRequest_default_instance_;
 
+inline constexpr StartImageStream::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        src_type_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        topic_prefix_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        topic_name_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()) {}
+
+template <typename>
+PROTOBUF_CONSTEXPR StartImageStream::StartImageStream(::_pbi::ConstantInitialized)
+    : _impl_(::_pbi::ConstantInitialized()) {}
+struct StartImageStreamDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR StartImageStreamDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~StartImageStreamDefaultTypeInternal() {}
+  union {
+    StartImageStream _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 StartImageStreamDefaultTypeInternal _StartImageStream_default_instance_;
+
 inline constexpr ManageExchangeResponse::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
@@ -157,7 +184,59 @@ struct ManageExchangeRequestDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ManageExchangeRequestDefaultTypeInternal _ManageExchangeRequest_default_instance_;
-static ::_pb::Metadata file_level_metadata_image_5fsvc_2eproto[4];
+
+inline constexpr GetImageResponse::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        image_id_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        topic_name_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        status_{0u} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR GetImageResponse::GetImageResponse(::_pbi::ConstantInitialized)
+    : _impl_(::_pbi::ConstantInitialized()) {}
+struct GetImageResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GetImageResponseDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GetImageResponseDefaultTypeInternal() {}
+  union {
+    GetImageResponse _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GetImageResponseDefaultTypeInternal _GetImageResponse_default_instance_;
+
+inline constexpr GetImageRequest::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        image_id_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        topic_prefix_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        topic_name_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()) {}
+
+template <typename>
+PROTOBUF_CONSTEXPR GetImageRequest::GetImageRequest(::_pbi::ConstantInitialized)
+    : _impl_(::_pbi::ConstantInitialized()) {}
+struct GetImageRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GetImageRequestDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GetImageRequestDefaultTypeInternal() {}
+  union {
+    GetImageRequest _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GetImageRequestDefaultTypeInternal _GetImageRequest_default_instance_;
+static ::_pb::Metadata file_level_metadata_image_5fsvc_2eproto[7];
 static constexpr const ::_pb::EnumDescriptor**
     file_level_enum_descriptors_image_5fsvc_2eproto = nullptr;
 static constexpr const ::_pb::ServiceDescriptor**
@@ -249,6 +328,48 @@ const ::uint32_t TableStruct_image_5fsvc_2eproto::offsets[] PROTOBUF_SECTION_VAR
     0,
     1,
     2,
+    PROTOBUF_FIELD_OFFSET(::StartImageStream, _impl_._has_bits_),
+    PROTOBUF_FIELD_OFFSET(::StartImageStream, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
+    PROTOBUF_FIELD_OFFSET(::StartImageStream, _impl_.src_type_),
+    PROTOBUF_FIELD_OFFSET(::StartImageStream, _impl_.topic_prefix_),
+    PROTOBUF_FIELD_OFFSET(::StartImageStream, _impl_.topic_name_),
+    ~0u,
+    ~0u,
+    0,
+    PROTOBUF_FIELD_OFFSET(::GetImageRequest, _impl_._has_bits_),
+    PROTOBUF_FIELD_OFFSET(::GetImageRequest, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
+    PROTOBUF_FIELD_OFFSET(::GetImageRequest, _impl_.image_id_),
+    PROTOBUF_FIELD_OFFSET(::GetImageRequest, _impl_.topic_prefix_),
+    PROTOBUF_FIELD_OFFSET(::GetImageRequest, _impl_.topic_name_),
+    ~0u,
+    ~0u,
+    0,
+    PROTOBUF_FIELD_OFFSET(::GetImageResponse, _impl_._has_bits_),
+    PROTOBUF_FIELD_OFFSET(::GetImageResponse, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
+    PROTOBUF_FIELD_OFFSET(::GetImageResponse, _impl_.image_id_),
+    PROTOBUF_FIELD_OFFSET(::GetImageResponse, _impl_.status_),
+    PROTOBUF_FIELD_OFFSET(::GetImageResponse, _impl_.topic_name_),
+    ~0u,
+    ~0u,
+    0,
 };
 
 static const ::_pbi::MigrationSchema
@@ -257,6 +378,9 @@ static const ::_pbi::MigrationSchema
         {20, 32, -1, sizeof(::ManageExchangeResponse)},
         {36, 56, -1, sizeof(::UploadImageRequest)},
         {67, 80, -1, sizeof(::UploadImageResponse)},
+        {85, 96, -1, sizeof(::StartImageStream)},
+        {99, 110, -1, sizeof(::GetImageRequest)},
+        {113, 124, -1, sizeof(::GetImageResponse)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -264,6 +388,9 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::_ManageExchangeResponse_default_instance_._instance,
     &::_UploadImageRequest_default_instance_._instance,
     &::_UploadImageResponse_default_instance_._instance,
+    &::_StartImageStream_default_instance_._instance,
+    &::_GetImageRequest_default_instance_._instance,
+    &::_GetImageResponse_default_instance_._instance,
 };
 const char descriptor_table_protodef_image_5fsvc_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
     "\n\017image_svc.proto\"\230\002\n\025ManageExchangeRequ"
@@ -290,23 +417,31 @@ const char descriptor_table_protodef_image_5fsvc_2eproto[] PROTOBUF_SECTION_VARI
     "\013exchange_id\030\001 \001(\t\022\021\n\tclient_id\030\002 \001(\t\022\025\n"
     "\010chunk_id\030\003 \001(\tH\000\210\001\001\022\025\n\010error_id\030\004 \001(\tH\001"
     "\210\001\001\022\032\n\rerror_message\030\005 \001(\tH\002\210\001\001B\013\n\t_chun"
-    "k_idB\013\n\t_error_idB\020\n\016_error_message2\220\001\n\013"
-    "X3DSService\022<\n\013UploadImage\022\023.UploadImage"
-    "Request\032\024.UploadImageResponse\"\000(\001\022C\n\016Man"
-    "ageExchange\022\026.ManageExchangeRequest\032\027.Ma"
-    "nageExchangeResponse\"\000b\006proto3"
+    "k_idB\013\n\t_error_idB\020\n\016_error_message\"b\n\020S"
+    "tartImageStream\022\020\n\010src_type\030\001 \001(\t\022\024\n\014top"
+    "ic_prefix\030\002 \001(\t\022\027\n\ntopic_name\030\003 \001(\tH\000\210\001\001"
+    "B\r\n\013_topic_name\"a\n\017GetImageRequest\022\020\n\010im"
+    "age_id\030\001 \001(\t\022\024\n\014topic_prefix\030\002 \001(\t\022\027\n\nto"
+    "pic_name\030\003 \001(\tH\000\210\001\001B\r\n\013_topic_name\"\\\n\020Ge"
+    "tImageResponse\022\020\n\010image_id\030\001 \001(\t\022\016\n\006stat"
+    "us\030\002 \001(\r\022\027\n\ntopic_name\030\003 \001(\tH\000\210\001\001B\r\n\013_to"
+    "pic_name2\220\001\n\013X3DSService\022<\n\013UploadImage\022"
+    "\023.UploadImageRequest\032\024.UploadImageRespon"
+    "se\"\000(\001\022C\n\016ManageExchange\022\026.ManageExchang"
+    "eRequest\032\027.ManageExchangeResponse\"\000b\006pro"
+    "to3"
 };
 static ::absl::once_flag descriptor_table_image_5fsvc_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_image_5fsvc_2eproto = {
     false,
     false,
-    1150,
+    1443,
     descriptor_table_protodef_image_5fsvc_2eproto,
     "image_svc.proto",
     &descriptor_table_image_5fsvc_2eproto_once,
     nullptr,
     0,
-    4,
+    7,
     schemas,
     file_default_instances,
     TableStruct_image_5fsvc_2eproto::offsets,
@@ -1906,6 +2041,792 @@ void UploadImageResponse::InternalSwap(UploadImageResponse* PROTOBUF_RESTRICT ot
   return ::_pbi::AssignDescriptors(
       &descriptor_table_image_5fsvc_2eproto_getter, &descriptor_table_image_5fsvc_2eproto_once,
       file_level_metadata_image_5fsvc_2eproto[3]);
+}
+// ===================================================================
+
+class StartImageStream::_Internal {
+ public:
+  using HasBits = decltype(std::declval<StartImageStream>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+    8 * PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_._has_bits_);
+  static void set_has_topic_name(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+};
+
+StartImageStream::StartImageStream(::google::protobuf::Arena* arena)
+    : ::google::protobuf::Message(arena) {
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:StartImageStream)
+}
+inline PROTOBUF_NDEBUG_INLINE StartImageStream::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        src_type_(arena, from.src_type_),
+        topic_prefix_(arena, from.topic_prefix_),
+        topic_name_(arena, from.topic_name_) {}
+
+StartImageStream::StartImageStream(
+    ::google::protobuf::Arena* arena,
+    const StartImageStream& from)
+    : ::google::protobuf::Message(arena) {
+  StartImageStream* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_);
+
+  // @@protoc_insertion_point(copy_constructor:StartImageStream)
+}
+inline PROTOBUF_NDEBUG_INLINE StartImageStream::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0},
+        src_type_(arena),
+        topic_prefix_(arena),
+        topic_name_(arena) {}
+
+inline void StartImageStream::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+}
+StartImageStream::~StartImageStream() {
+  // @@protoc_insertion_point(destructor:StartImageStream)
+  _internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  SharedDtor();
+}
+inline void StartImageStream::SharedDtor() {
+  ABSL_DCHECK(GetArena() == nullptr);
+  _impl_.src_type_.Destroy();
+  _impl_.topic_prefix_.Destroy();
+  _impl_.topic_name_.Destroy();
+  _impl_.~Impl_();
+}
+
+PROTOBUF_NOINLINE void StartImageStream::Clear() {
+// @@protoc_insertion_point(message_clear_start:StartImageStream)
+  PROTOBUF_TSAN_WRITE(&_impl_._tsan_detect_race);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.src_type_.ClearToEmpty();
+  _impl_.topic_prefix_.ClearToEmpty();
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    _impl_.topic_name_.ClearNonDefaultToEmpty();
+  }
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+const char* StartImageStream::_InternalParse(
+    const char* ptr, ::_pbi::ParseContext* ctx) {
+  ptr = ::_pbi::TcParser::ParseLoop(this, ptr, ctx, &_table_.header);
+  return ptr;
+}
+
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<2, 3, 0, 55, 2> StartImageStream::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_._has_bits_),
+    0, // no _extensions_
+    3, 24,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967288,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    3,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    &_StartImageStream_default_instance_._instance,
+    ::_pbi::TcParser::GenericFallback,  // fallback
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // string src_type = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_.src_type_)}},
+    // string topic_prefix = 2;
+    {::_pbi::TcParser::FastUS1,
+     {18, 63, 0, PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_.topic_prefix_)}},
+    // optional string topic_name = 3;
+    {::_pbi::TcParser::FastUS1,
+     {26, 0, 0, PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_.topic_name_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // string src_type = 1;
+    {PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_.src_type_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // string topic_prefix = 2;
+    {PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_.topic_prefix_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // optional string topic_name = 3;
+    {PROTOBUF_FIELD_OFFSET(StartImageStream, _impl_.topic_name_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+  }},
+  // no aux_entries
+  {{
+    "\20\10\14\12\0\0\0\0"
+    "StartImageStream"
+    "src_type"
+    "topic_prefix"
+    "topic_name"
+  }},
+};
+
+::uint8_t* StartImageStream::_InternalSerialize(
+    ::uint8_t* target,
+    ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:StartImageStream)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  // string src_type = 1;
+  if (!this->_internal_src_type().empty()) {
+    const std::string& _s = this->_internal_src_type();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "StartImageStream.src_type");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
+  }
+
+  // string topic_prefix = 2;
+  if (!this->_internal_topic_prefix().empty()) {
+    const std::string& _s = this->_internal_topic_prefix();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "StartImageStream.topic_prefix");
+    target = stream->WriteStringMaybeAliased(2, _s, target);
+  }
+
+  cached_has_bits = _impl_._has_bits_[0];
+  // optional string topic_name = 3;
+  if (cached_has_bits & 0x00000001u) {
+    const std::string& _s = this->_internal_topic_name();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "StartImageStream.topic_name");
+    target = stream->WriteStringMaybeAliased(3, _s, target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:StartImageStream)
+  return target;
+}
+
+::size_t StartImageStream::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:StartImageStream)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string src_type = 1;
+  if (!this->_internal_src_type().empty()) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_src_type());
+  }
+
+  // string topic_prefix = 2;
+  if (!this->_internal_topic_prefix().empty()) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_topic_prefix());
+  }
+
+  // optional string topic_name = 3;
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_topic_name());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::google::protobuf::Message::ClassData StartImageStream::_class_data_ = {
+    StartImageStream::MergeImpl,
+    nullptr,  // OnDemandRegisterArenaDtor
+};
+const ::google::protobuf::Message::ClassData* StartImageStream::GetClassData() const {
+  return &_class_data_;
+}
+
+void StartImageStream::MergeImpl(::google::protobuf::Message& to_msg, const ::google::protobuf::Message& from_msg) {
+  auto* const _this = static_cast<StartImageStream*>(&to_msg);
+  auto& from = static_cast<const StartImageStream&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:StartImageStream)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_src_type().empty()) {
+    _this->_internal_set_src_type(from._internal_src_type());
+  }
+  if (!from._internal_topic_prefix().empty()) {
+    _this->_internal_set_topic_prefix(from._internal_topic_prefix());
+  }
+  if ((from._impl_._has_bits_[0] & 0x00000001u) != 0) {
+    _this->_internal_set_topic_name(from._internal_topic_name());
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void StartImageStream::CopyFrom(const StartImageStream& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:StartImageStream)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+PROTOBUF_NOINLINE bool StartImageStream::IsInitialized() const {
+  return true;
+}
+
+::_pbi::CachedSize* StartImageStream::AccessCachedSize() const {
+  return &_impl_._cached_size_;
+}
+void StartImageStream::InternalSwap(StartImageStream* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.src_type_, &other->_impl_.src_type_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.topic_prefix_, &other->_impl_.topic_prefix_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.topic_name_, &other->_impl_.topic_name_, arena);
+}
+
+::google::protobuf::Metadata StartImageStream::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_image_5fsvc_2eproto_getter, &descriptor_table_image_5fsvc_2eproto_once,
+      file_level_metadata_image_5fsvc_2eproto[4]);
+}
+// ===================================================================
+
+class GetImageRequest::_Internal {
+ public:
+  using HasBits = decltype(std::declval<GetImageRequest>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+    8 * PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_._has_bits_);
+  static void set_has_topic_name(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+};
+
+GetImageRequest::GetImageRequest(::google::protobuf::Arena* arena)
+    : ::google::protobuf::Message(arena) {
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:GetImageRequest)
+}
+inline PROTOBUF_NDEBUG_INLINE GetImageRequest::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        image_id_(arena, from.image_id_),
+        topic_prefix_(arena, from.topic_prefix_),
+        topic_name_(arena, from.topic_name_) {}
+
+GetImageRequest::GetImageRequest(
+    ::google::protobuf::Arena* arena,
+    const GetImageRequest& from)
+    : ::google::protobuf::Message(arena) {
+  GetImageRequest* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_);
+
+  // @@protoc_insertion_point(copy_constructor:GetImageRequest)
+}
+inline PROTOBUF_NDEBUG_INLINE GetImageRequest::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0},
+        image_id_(arena),
+        topic_prefix_(arena),
+        topic_name_(arena) {}
+
+inline void GetImageRequest::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+}
+GetImageRequest::~GetImageRequest() {
+  // @@protoc_insertion_point(destructor:GetImageRequest)
+  _internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  SharedDtor();
+}
+inline void GetImageRequest::SharedDtor() {
+  ABSL_DCHECK(GetArena() == nullptr);
+  _impl_.image_id_.Destroy();
+  _impl_.topic_prefix_.Destroy();
+  _impl_.topic_name_.Destroy();
+  _impl_.~Impl_();
+}
+
+PROTOBUF_NOINLINE void GetImageRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:GetImageRequest)
+  PROTOBUF_TSAN_WRITE(&_impl_._tsan_detect_race);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.image_id_.ClearToEmpty();
+  _impl_.topic_prefix_.ClearToEmpty();
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    _impl_.topic_name_.ClearNonDefaultToEmpty();
+  }
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+const char* GetImageRequest::_InternalParse(
+    const char* ptr, ::_pbi::ParseContext* ctx) {
+  ptr = ::_pbi::TcParser::ParseLoop(this, ptr, ctx, &_table_.header);
+  return ptr;
+}
+
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<2, 3, 0, 54, 2> GetImageRequest::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_._has_bits_),
+    0, // no _extensions_
+    3, 24,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967288,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    3,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    &_GetImageRequest_default_instance_._instance,
+    ::_pbi::TcParser::GenericFallback,  // fallback
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // string image_id = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_.image_id_)}},
+    // string topic_prefix = 2;
+    {::_pbi::TcParser::FastUS1,
+     {18, 63, 0, PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_.topic_prefix_)}},
+    // optional string topic_name = 3;
+    {::_pbi::TcParser::FastUS1,
+     {26, 0, 0, PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_.topic_name_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // string image_id = 1;
+    {PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_.image_id_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // string topic_prefix = 2;
+    {PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_.topic_prefix_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // optional string topic_name = 3;
+    {PROTOBUF_FIELD_OFFSET(GetImageRequest, _impl_.topic_name_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+  }},
+  // no aux_entries
+  {{
+    "\17\10\14\12\0\0\0\0"
+    "GetImageRequest"
+    "image_id"
+    "topic_prefix"
+    "topic_name"
+  }},
+};
+
+::uint8_t* GetImageRequest::_InternalSerialize(
+    ::uint8_t* target,
+    ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:GetImageRequest)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  // string image_id = 1;
+  if (!this->_internal_image_id().empty()) {
+    const std::string& _s = this->_internal_image_id();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "GetImageRequest.image_id");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
+  }
+
+  // string topic_prefix = 2;
+  if (!this->_internal_topic_prefix().empty()) {
+    const std::string& _s = this->_internal_topic_prefix();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "GetImageRequest.topic_prefix");
+    target = stream->WriteStringMaybeAliased(2, _s, target);
+  }
+
+  cached_has_bits = _impl_._has_bits_[0];
+  // optional string topic_name = 3;
+  if (cached_has_bits & 0x00000001u) {
+    const std::string& _s = this->_internal_topic_name();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "GetImageRequest.topic_name");
+    target = stream->WriteStringMaybeAliased(3, _s, target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:GetImageRequest)
+  return target;
+}
+
+::size_t GetImageRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:GetImageRequest)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string image_id = 1;
+  if (!this->_internal_image_id().empty()) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_image_id());
+  }
+
+  // string topic_prefix = 2;
+  if (!this->_internal_topic_prefix().empty()) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_topic_prefix());
+  }
+
+  // optional string topic_name = 3;
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_topic_name());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::google::protobuf::Message::ClassData GetImageRequest::_class_data_ = {
+    GetImageRequest::MergeImpl,
+    nullptr,  // OnDemandRegisterArenaDtor
+};
+const ::google::protobuf::Message::ClassData* GetImageRequest::GetClassData() const {
+  return &_class_data_;
+}
+
+void GetImageRequest::MergeImpl(::google::protobuf::Message& to_msg, const ::google::protobuf::Message& from_msg) {
+  auto* const _this = static_cast<GetImageRequest*>(&to_msg);
+  auto& from = static_cast<const GetImageRequest&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:GetImageRequest)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_image_id().empty()) {
+    _this->_internal_set_image_id(from._internal_image_id());
+  }
+  if (!from._internal_topic_prefix().empty()) {
+    _this->_internal_set_topic_prefix(from._internal_topic_prefix());
+  }
+  if ((from._impl_._has_bits_[0] & 0x00000001u) != 0) {
+    _this->_internal_set_topic_name(from._internal_topic_name());
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GetImageRequest::CopyFrom(const GetImageRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:GetImageRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+PROTOBUF_NOINLINE bool GetImageRequest::IsInitialized() const {
+  return true;
+}
+
+::_pbi::CachedSize* GetImageRequest::AccessCachedSize() const {
+  return &_impl_._cached_size_;
+}
+void GetImageRequest::InternalSwap(GetImageRequest* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.image_id_, &other->_impl_.image_id_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.topic_prefix_, &other->_impl_.topic_prefix_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.topic_name_, &other->_impl_.topic_name_, arena);
+}
+
+::google::protobuf::Metadata GetImageRequest::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_image_5fsvc_2eproto_getter, &descriptor_table_image_5fsvc_2eproto_once,
+      file_level_metadata_image_5fsvc_2eproto[5]);
+}
+// ===================================================================
+
+class GetImageResponse::_Internal {
+ public:
+  using HasBits = decltype(std::declval<GetImageResponse>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+    8 * PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_._has_bits_);
+  static void set_has_topic_name(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+};
+
+GetImageResponse::GetImageResponse(::google::protobuf::Arena* arena)
+    : ::google::protobuf::Message(arena) {
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:GetImageResponse)
+}
+inline PROTOBUF_NDEBUG_INLINE GetImageResponse::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        image_id_(arena, from.image_id_),
+        topic_name_(arena, from.topic_name_) {}
+
+GetImageResponse::GetImageResponse(
+    ::google::protobuf::Arena* arena,
+    const GetImageResponse& from)
+    : ::google::protobuf::Message(arena) {
+  GetImageResponse* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_);
+  _impl_.status_ = from._impl_.status_;
+
+  // @@protoc_insertion_point(copy_constructor:GetImageResponse)
+}
+inline PROTOBUF_NDEBUG_INLINE GetImageResponse::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0},
+        image_id_(arena),
+        topic_name_(arena) {}
+
+inline void GetImageResponse::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  _impl_.status_ = {};
+}
+GetImageResponse::~GetImageResponse() {
+  // @@protoc_insertion_point(destructor:GetImageResponse)
+  _internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  SharedDtor();
+}
+inline void GetImageResponse::SharedDtor() {
+  ABSL_DCHECK(GetArena() == nullptr);
+  _impl_.image_id_.Destroy();
+  _impl_.topic_name_.Destroy();
+  _impl_.~Impl_();
+}
+
+PROTOBUF_NOINLINE void GetImageResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:GetImageResponse)
+  PROTOBUF_TSAN_WRITE(&_impl_._tsan_detect_race);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.image_id_.ClearToEmpty();
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    _impl_.topic_name_.ClearNonDefaultToEmpty();
+  }
+  _impl_.status_ = 0u;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+const char* GetImageResponse::_InternalParse(
+    const char* ptr, ::_pbi::ParseContext* ctx) {
+  ptr = ::_pbi::TcParser::ParseLoop(this, ptr, ctx, &_table_.header);
+  return ptr;
+}
+
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<2, 3, 0, 43, 2> GetImageResponse::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_._has_bits_),
+    0, // no _extensions_
+    3, 24,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967288,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    3,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    &_GetImageResponse_default_instance_._instance,
+    ::_pbi::TcParser::GenericFallback,  // fallback
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // string image_id = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_.image_id_)}},
+    // uint32 status = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GetImageResponse, _impl_.status_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_.status_)}},
+    // optional string topic_name = 3;
+    {::_pbi::TcParser::FastUS1,
+     {26, 0, 0, PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_.topic_name_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // string image_id = 1;
+    {PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_.image_id_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // uint32 status = 2;
+    {PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_.status_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt32)},
+    // optional string topic_name = 3;
+    {PROTOBUF_FIELD_OFFSET(GetImageResponse, _impl_.topic_name_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
+  }},
+  // no aux_entries
+  {{
+    "\20\10\0\12\0\0\0\0"
+    "GetImageResponse"
+    "image_id"
+    "topic_name"
+  }},
+};
+
+::uint8_t* GetImageResponse::_InternalSerialize(
+    ::uint8_t* target,
+    ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:GetImageResponse)
+  ::uint32_t cached_has_bits = 0;
+  (void)cached_has_bits;
+
+  // string image_id = 1;
+  if (!this->_internal_image_id().empty()) {
+    const std::string& _s = this->_internal_image_id();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "GetImageResponse.image_id");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
+  }
+
+  // uint32 status = 2;
+  if (this->_internal_status() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+        2, this->_internal_status(), target);
+  }
+
+  cached_has_bits = _impl_._has_bits_[0];
+  // optional string topic_name = 3;
+  if (cached_has_bits & 0x00000001u) {
+    const std::string& _s = this->_internal_topic_name();
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "GetImageResponse.topic_name");
+    target = stream->WriteStringMaybeAliased(3, _s, target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target =
+        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+            _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:GetImageResponse)
+  return target;
+}
+
+::size_t GetImageResponse::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:GetImageResponse)
+  ::size_t total_size = 0;
+
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string image_id = 1;
+  if (!this->_internal_image_id().empty()) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_image_id());
+  }
+
+  // optional string topic_name = 3;
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                    this->_internal_topic_name());
+  }
+
+  // uint32 status = 2;
+  if (this->_internal_status() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+        this->_internal_status());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::google::protobuf::Message::ClassData GetImageResponse::_class_data_ = {
+    GetImageResponse::MergeImpl,
+    nullptr,  // OnDemandRegisterArenaDtor
+};
+const ::google::protobuf::Message::ClassData* GetImageResponse::GetClassData() const {
+  return &_class_data_;
+}
+
+void GetImageResponse::MergeImpl(::google::protobuf::Message& to_msg, const ::google::protobuf::Message& from_msg) {
+  auto* const _this = static_cast<GetImageResponse*>(&to_msg);
+  auto& from = static_cast<const GetImageResponse&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:GetImageResponse)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_image_id().empty()) {
+    _this->_internal_set_image_id(from._internal_image_id());
+  }
+  if ((from._impl_._has_bits_[0] & 0x00000001u) != 0) {
+    _this->_internal_set_topic_name(from._internal_topic_name());
+  }
+  if (from._internal_status() != 0) {
+    _this->_internal_set_status(from._internal_status());
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GetImageResponse::CopyFrom(const GetImageResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:GetImageResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+PROTOBUF_NOINLINE bool GetImageResponse::IsInitialized() const {
+  return true;
+}
+
+::_pbi::CachedSize* GetImageResponse::AccessCachedSize() const {
+  return &_impl_._cached_size_;
+}
+void GetImageResponse::InternalSwap(GetImageResponse* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.image_id_, &other->_impl_.image_id_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.topic_name_, &other->_impl_.topic_name_, arena);
+        swap(_impl_.status_, other->_impl_.status_);
+}
+
+::google::protobuf::Metadata GetImageResponse::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_image_5fsvc_2eproto_getter, &descriptor_table_image_5fsvc_2eproto_once,
+      file_level_metadata_image_5fsvc_2eproto[6]);
 }
 // @@protoc_insertion_point(namespace_scope)
 namespace google {
