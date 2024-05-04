@@ -129,7 +129,7 @@ if(TRANSPORT_GRPC)
   endif()
 endif()
 
-message("\n== SYSTEM LIBRARY CHECK COMPLETE\n")
+message("== SYSTEM LIBRARY CHECK COMPLETE\n")
 
 if(TRANSPORT_GRPC)
   add_custom_command(
@@ -186,6 +186,14 @@ add_library(
 )
 target_link_libraries(utils_vstk  ${Boost_LIBRARIES})
 
+add_library(
+    calib_kit_vstk SHARED
+    src/calib/CameraCalibration.cpp
+    src/config/CalibConfig.cpp
+)
+target_link_libraries(calib_kit_vstk  ${Boost_LIBRARIES})
+
+
 
 add_executable( vstk src/main.cpp )
 
@@ -193,6 +201,10 @@ target_link_libraries( vstk ${Boost_LIBRARIES})
 
 target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk)
 target_link_libraries( vstk ${OpenCV_LIBS})
+
+add_executable( calib_kit src/calib.cpp )
+target_link_libraries( calib_kit ${Boost_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries( calib_kit calib_kit_vstk)
 
 if(TRANSPORT_GRPC)
   target_link_libraries( vstk svc_grpc_proto image_svc_vstk )
