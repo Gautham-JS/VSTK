@@ -169,7 +169,7 @@ void FeatureExtractor::reset() {
             this->fextract = cv::SIFT::create(500);
             break;
         case vstk::FExtractionAlgorithm::ADAPTIVE_FAST :
-            this->adaptive_extractor = new AdaptiveFastExtractor(200, 2000, 4, 4);
+            this->adaptive_extractor = new AdaptiveFastExtractor(config);
             break;
         default:
             this->fextract = cv::FastFeatureDetector::create();
@@ -198,16 +198,18 @@ void FeatureExtractor::display_features(ImageContextHolder image_ctx) {
     cv::waitKey();
 }
 
-AdaptiveFastExtractor::AdaptiveFastExtractor(int n_min, int n_max, int cells_x, int cells_y) :
-    n_min(n_min), 
-    n_max(n_max), 
-    cell_size(std::make_pair(cells_x, cells_y)) {
-    this->fth_max = 100;
-    this->fth_min = 10;
-    this->th_step = 10;
-    this->thresholds = std::vector<int>(16, 20);
+AdaptiveFastExtractor::AdaptiveFastExtractor(VstkConfig config) :
+    n_min(config.get_min_count_adafast()), 
+    n_max(config.get_max_count_adafast()), 
+    cell_size(config.get_cell_size_adafast()),
+    fth_max(config.get_max_threshold_adafast()),
+    fth_min(config.get_min_threshold_adafast()),
+    th_step(config.get_threshold_step_size_adafast()) 
+{
+    size_t cell_length = this->cell_size.first * this->cell_size.second;
+    this->thresholds = std::vector<int>(cell_length, 20);
     this->detectors = std::vector<cv::Ptr<cv::Feature2D>>(
-        16,
+        cell_length,
         cv::FastFeatureDetector::create(20) 
     );
 }
@@ -243,7 +245,7 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
     FeaturesHolder holder;
     cv::Mat im = im_ctx.get_image();
     std::vector<std::pair<int, int>> cell_origins;
-    std::vector<cv::Mat> cells = vstk::split_image(im, 4, 4, cell_origins);
+    std::vector<cv::Mat> cells = vstk::split_image(im, cell_size.first, cell_size.second, cell_origins);
     int adj_iters = 0;
     int nc_max = n_max / cells.size();
     int nc_min = n_min / cells.size();
@@ -277,6 +279,12 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
 
         holder.kps.insert(std::end(holder.kps), std::begin(cell_kps), std::end(cell_kps));
     }
-    INFOLOG("Adaptive FAST extractor summary : Total points : %ld, Threshold Adjustments : %d for 16 (4x4) cells", holder.kps.size(), adj_iters);
+    INFOLOG("Adaptive FAST extractor summary : Total points : %ld, Threshold Adjustments : %d for %ld (%dx%d) cells", 
+        holder.kps.size(), 
+        adj_iters,
+        cells.size(),
+        this->cell_size.first,
+        this->cell_size.second
+    );
     return holder;
 }

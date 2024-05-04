@@ -16,8 +16,8 @@ void VstkConfig::set_working_dir(std::string working_dir) {
     this->working_dir = working_dir;
 }
 
-void VstkConfig::set_run_data_dir(std::string run_data_dir) {
-    this->run_data_directory = run_data_dir;
+void VstkConfig::set_run_data_src(std::string run_data_dir) {
+    this->run_data_source = run_data_dir;
 }
 
 void VstkConfig::set_load_scheme(LoadScheme load_scheme) {
@@ -40,8 +40,8 @@ std::string VstkConfig::get_working_dir() {
     return this->working_dir;
 }
 
-std::string VstkConfig::get_run_data_dir() {
-    return this->run_data_directory;
+std::string VstkConfig::get_run_data_src() {
+    return this->run_data_source;
 }
 
 
@@ -76,6 +76,67 @@ void vstk::VstkConfig::set_num_features_retained(int num_features) {
 int vstk::VstkConfig::get_num_features_retained() {
     return this->num_features_retained;
 }
+
+void vstk::VstkConfig::set_slam_type(vstk::SLAMType type) {
+    this->slam_type = slam_type;
+}
+
+SLAMType VstkConfig::get_slam_type() {
+    return this->slam_type;
+}
+
+
+int VstkConfig::get_min_count_adafast() {
+    return this->min_count_adafast;
+}
+
+int VstkConfig::get_max_count_adafast() {
+    return this->max_count_adafast;
+}
+
+int VstkConfig::get_min_threshold_adafast() {
+    return this->min_threshold_adafast;
+}
+
+int VstkConfig::get_max_threshold_adafast() {
+    return this->max_threshold_adafast;
+}
+
+int VstkConfig::get_threshold_step_size_adafast() {
+    return this->threshold_step_size_adafast;
+}
+
+std::pair<int, int> VstkConfig::get_cell_size_adafast() {
+    return this->cell_size_adafast;
+}
+
+int VstkConfig::load_from_yaml(std::string filename) {
+    int rc = 1;
+    cv::FileStorage fs(filename, cv::FileStorage::READ);
+    cv::FileNode node;
+    
+    node = fs["adafast"];
+    if(!node.empty()) {
+        // configure adafast properties
+        this->set_cfg <int> (node["min_count"], this->min_count_adafast);   
+        this->set_cfg <int> (node["max_count"], this->max_count_adafast);
+        this->set_cfg <int> (node["min_threshold"], this->min_threshold_adafast);
+        this->set_cfg <int> (node["max_threshold"], this->max_threshold_adafast);
+
+        int x = cell_size_adafast.first, y = cell_size_adafast.second;
+        this->set_cfg <int> (node["cell_size_x"], x);
+        this->set_cfg <int> (node["cell_size_y"], y);
+        this->cell_size_adafast = std::make_pair(x, y);
+
+        this->set_cfg(node["threshold_step_size"], this->threshold_step_size_adafast);
+    } 
+
+    
+
+    RETURN_BLOCK:
+        return rc;
+}
+
 
 std::string vstk::enum_to_str(vstk::FExtractionAlgorithm algo) {
     std::string str;

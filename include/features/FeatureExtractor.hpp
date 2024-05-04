@@ -80,7 +80,7 @@ namespace vstk {
             void down_step_threshold(int cell_idx);
             void up_step_threshold(int cell_idx);
         public:
-            AdaptiveFastExtractor(int n_min, int n_max, int cells_x, int cells_y);
+            AdaptiveFastExtractor(VstkConfig config);
             FeaturesHolder extract(ImageContextHolder &image);
     };
 

@@ -211,8 +211,8 @@ void FeatureMatcher::filter_homography(MatchesHolder &holder, ImageContextHolder
     for(int i=0; i<holder.good_matches.size(); i++) {
         cv::DMatch match_pt = holder.good_matches[i];
 
-        cv::Point2f object_pt = image1_ctx.get_features_holder().kps[match_pt.queryIdx].pt;
-        cv::Point2f scene_pt = image2_ctx.get_features_holder().kps[match_pt.trainIdx].pt;
+        cv::Point2f object_pt = image2_ctx.get_features_holder().kps[match_pt.queryIdx].pt;
+        cv::Point2f scene_pt = image1_ctx.get_features_holder().kps[match_pt.trainIdx].pt;
         obj.emplace_back(object_pt);
         scene.emplace_back(scene_pt);
     }
