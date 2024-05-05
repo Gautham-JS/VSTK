@@ -152,57 +152,57 @@ if(TRANSPORT_GRPC)
 
   add_library(  
     image_svc_vstk SHARED
-    src/protoimpl/ImageSvc.cpp
+    src/protoimpl/ImageSvc.cc
   )
   target_link_libraries( image_svc_vstk  grpc++ grpc++_unsecure libprotobuf ${Boost_LIBRARIES})
 endif()
 
 add_library(
     features_vstk SHARED
-    src/features/FeatureExtractor.cpp
-    src/features/FeatureMatcher.cpp
+    src/features/FeatureExtractor.cc
+    src/features/FeatureMatcher.cc
 )
 target_link_libraries( features_vstk ${Boost_LIBRARIES})
 
 add_library(
     config_vstk SHARED
-    src/config/Config.cpp
+    src/config/Config.cc
 )
 target_link_libraries(config_vstk  ${Boost_LIBRARIES})
 
 add_library(
     io_vstk SHARED
-    src/io/DiskIO.cpp
-    src/io/Serializer.cpp
+    src/io/DiskIO.cc
+    src/io/Serializer.cc
 )
 
 target_link_libraries(io_vstk  ${Boost_LIBRARIES})
 
 add_library(
     utils_vstk SHARED
-    src/utils/ObjectLifecycle.cpp
-    src/utils/TimerUtils.cpp
-    src/utils/CvUtils.cpp
+    src/utils/ObjectLifecycle.cc
+    src/utils/TimerUtils.cc
+    src/utils/CvUtils.cc
 )
 target_link_libraries(utils_vstk  ${Boost_LIBRARIES})
 
 add_library(
     calib_kit_vstk SHARED
-    src/calib/CameraCalibration.cpp
-    src/config/CalibConfig.cpp
+    src/calib/CameraCalibration.cc
+    src/config/CalibConfig.cc
 )
 target_link_libraries(calib_kit_vstk  ${Boost_LIBRARIES})
 
 
 
-add_executable( vstk src/main.cpp )
+add_executable( vstk src/main.cc )
 
 target_link_libraries( vstk ${Boost_LIBRARIES})
 
 target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk)
 target_link_libraries( vstk ${OpenCV_LIBS})
 
-add_executable( calib_kit src/calib.cpp )
+add_executable( calib_kit src/calib.cc )
 target_link_libraries( calib_kit ${Boost_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries( calib_kit calib_kit_vstk)
 
