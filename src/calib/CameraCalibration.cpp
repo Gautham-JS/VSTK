@@ -22,12 +22,14 @@ void calc_obj_and_img_pts(
 
 }
 
-void CameraCalibrator::run(MonoCalibConfig &cfg) {
+MonoCamParams CameraCalibrator::run(MonoCalibConfig &cfg) {
     cv::Mat frame, gray;
     std::vector<cv::Point2f> corner_pts;
     std::vector<std::vector<cv::Point3f>> obj_pts;
     std::vector<std::vector<cv::Point2f>> image_pts;
+    MonoCamParams params;
     bool success;
+    
 
     cv::glob(cfg.dir_pattern, cfg.filenames);
 
@@ -67,22 +69,23 @@ void CameraCalibrator::run(MonoCalibConfig &cfg) {
     cv::destroyAllWindows();
 
     INFOLOG("Object Points : %ld, Image Points : %ld, starting calibration compute...", obj_pts.size(), image_pts.size());
-    cv::calibrateCamera(obj_pts, image_pts, cv::Size(gray.rows, gray.cols), cfg.K, cfg.dist_coeff, cfg.Rvec, cfg.tvec);
+    cv::calibrateCamera(obj_pts, image_pts, cv::Size(gray.rows, gray.cols), params.K, params.dist_coeff, params.R_vecs, params.t_vecs);
     INFOLOG("Done!");
 
-    std::cout << "cameraMatrix : " << cfg.K << std::endl;
-    std::cout << "distCoeffs : " << cfg.dist_coeff << std::endl;
-    std::cout << "Rotation vector : " << cfg.Rvec[0] << std::endl;
-    std::cout << "Translation vector : " << cfg.tvec[0] << std::endl;
+    std::cout << "cameraMatrix : " << params.K << std::endl;
+    std::cout << "distCoeffs : " << params.dist_coeff << std::endl;
+    std::cout << "Rotation vector size : " << params.R_vecs.size() << std::endl;
+    std::cout << "Translation vector size : " << params.t_vecs.size() << std::endl;
+    return params;
 }
 
 
-void CameraCalibrator::run(CalibConfig &cfg) {
+StereoCamParams CameraCalibrator::run(CalibConfig &cfg) {
     cv::Mat im1, frame1, im2, frame2;
     std::vector<cv::Point2f> corner_pts1, corner_pts2;
     std::vector<std::vector<cv::Point3f>> obj_pts1, obj_pts2;
     std::vector<std::vector<cv::Point2f>> image_pts1, image_pts2;
-    
+    StereoCamParams params;
     bool s1, s2;
 
     cv::glob(cfg.cam1.dir_pattern, cfg.cam1.filenames);
@@ -141,24 +144,28 @@ void CameraCalibrator::run(CalibConfig &cfg) {
     cv::destroyAllWindows();
 
     INFOLOG("Object Points : %ld, Image Points : %ld.", obj_pts1.size(), image_pts1.size());
-    cv::Mat K1, K2, d1, d2;
     INFOLOG("Running mono compute for camera 1 ...");
-    cv::calibrateCamera(obj_pts1, image_pts1, cv::Size(frame1.rows, frame1.cols), K1, d1, cfg.cam1.Rvec, cfg.cam1.tvec);
+    cv::calibrateCamera(obj_pts1, image_pts1, cv::Size(frame1.rows, frame1.cols), params.cam1_params.K, params.cam1_params.dist_coeff, params.cam1_params.R_vecs, params.cam1_params.t_vecs);
     INFOLOG("Done!");
     INFOLOG("Running mono compute for camera 2 ...");
-    cv::calibrateCamera(obj_pts1, image_pts2, cv::Size(frame1.rows, frame1.cols), K2, d2, cfg.cam2.Rvec, cfg.cam2.tvec);
+    cv::calibrateCamera(obj_pts1, image_pts2, cv::Size(frame1.rows, frame1.cols), params.cam2_params.K, params.cam2_params.dist_coeff, params.cam2_params.R_vecs, params.cam2_params.t_vecs);
     INFOLOG("Done!")
     INFOLOG("Starting stereoscopic calibration compute...");
-    cv::stereoCalibrate(obj_pts1, image_pts1, image_pts2, K1, d2, K2, d2, cv::Size(frame1.rows, frame1.cols), cfg.Rs, cfg.ts, cfg.E, cfg.F);
+    cv::stereoCalibrate(
+        obj_pts1, 
+        image_pts1, 
+        image_pts2, 
+        params.cam1_params.K, params.cam1_params.dist_coeff, 
+        params.cam2_params.K, params.cam2_params.dist_coeff, 
+        cv::Size(frame1.rows, frame1.cols), 
+        params.Rs, params.ts, 
+        params.E, params.F
+    );
     INFOLOG("Done!");
 
-    std::cout << "cameraMatrix 1 : " << K1 << std::endl;
-    std::cout << "distCoeffs 1 : " << d1 << std::endl;
-    std::cout << "cameraMatrix 2 : " << K2 << std::endl;    
-    std::cout << "distCoeffs 2 : " << d2 << std::endl;
-
-    cfg.cam1.K = K1;
-    cfg.cam2.K = K2;
-    cfg.cam1.dist_coeff = d1;
-    cfg.cam2.dist_coeff = d2;
+    std::cout << "cameraMatrix 1 : " << params.cam1_params.K << std::endl;
+    std::cout << "distCoeffs 1 : " << params.cam1_params.dist_coeff << std::endl;
+    std::cout << "cameraMatrix 2 : " << params.cam2_params.K << std::endl;    
+    std::cout << "distCoeffs 2 : " << params.cam2_params.dist_coeff << std::endl;
+    return params;
 }

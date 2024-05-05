@@ -23,8 +23,8 @@ namespace vstk {
             );
         public:
             CameraCalibrator(std::pair<int, int> cb_dimensions); 
-            void run(MonoCalibConfig &cfg);
-            void run(CalibConfig &cfg);
+            MonoCamParams run(MonoCalibConfig &cfg);
+            StereoCamParams run(CalibConfig &cfg);
     };
 
 }

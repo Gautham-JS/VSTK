@@ -102,15 +102,17 @@ int main(int argc, char *argv[]) {
     }
     vstk::CalibConfig config = build_config_from_args(argc, argv);
     vstk::CameraCalibrator calibrator(std::make_pair(config.ncols, config.nrows));
+    vstk::MonoCamParams mono_params;
+    vstk::StereoCamParams stereo_params;
 
     switch (config.mode) {
     case vstk::CALIB_MODE::MONO :
-        calibrator.run(config.cam1);
-        vstk::write_mono_config(config.cam1, config.out_dir + "/cam.yaml");
+        mono_params = calibrator.run(config.cam1);
+        vstk::write_mono_params(mono_params, config.out_dir + "/cam.yaml");
         break;
     case vstk::CALIB_MODE::STEREO :
-        calibrator.run(config);
-        vstk::write_stereo_config(config, config.out_dir + "/stereo_cam.yaml");
+        stereo_params = calibrator.run(config);
+        vstk::write_stereo_params(stereo_params, config.out_dir + "/stereo_cam.yaml");
     default:
         break;
     }
