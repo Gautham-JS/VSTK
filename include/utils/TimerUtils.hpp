@@ -29,7 +29,7 @@ namespace vstk {
     vstk::Timer get_timer(std::string marker);
 
     void log_timer(vstk::Timer timer, FILE *fptr);
-    void log_fps(vstk::Timer timer, FILE* fptr);   
+    void log_fps(vstk::Timer timer, FILE* fptr); 
 }
 
 #endif

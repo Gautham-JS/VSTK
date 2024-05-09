@@ -16,7 +16,7 @@ namespace vstk {
 
     enum class RunType {
         STATIC_DIR,
-        RPC_SERVICE
+        STREAM
     };
 
     enum SLAMType {
@@ -45,6 +45,21 @@ namespace vstk {
         BRIEF
     };
 
+    typedef struct MonoCameraParams {
+        cv::Mat K, dist_coeff;
+        std::vector<cv::Mat> R_vecs, t_vecs;
+        int n_rows, n_cols;
+    } MonoCamParams;
+
+    typedef struct StereoCameraParams {
+        MonoCamParams cam1_params, cam2_params;
+        cv::Mat Rs, ts, E, F;
+        int n_rows, n_cols;
+    } StereoCamParams;
+
+    int read_stereo_params(std::string filepath, StereoCamParams &params);
+
+
     
     class VstkConfig {
         private:
@@ -57,7 +72,7 @@ namespace vstk {
             DComputeAlgorithm descriptor_compute_algo = DComputeAlgorithm::ORB;
             MatchAlgorithm match_algo = MatchAlgorithm::BF;
 
-            std::string run_data_source;
+            std::string run_data_source, stereo_im1_source, stereo_im2_source;
             std::string working_dir;
             std::string config_file;
 

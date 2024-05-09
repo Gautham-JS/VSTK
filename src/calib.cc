@@ -65,10 +65,10 @@ vstk::CalibConfig build_config_from_args(int argc, char* argv[]) {
     mode_str = std::string(argv[optind]);
     
     if(mode_str == "mono") {
-        conf.mode = vstk::CALIB_MODE::MONO;
+        conf.mode = vstk::CALIB_MODE::MONO_CAM;
     }
     else if(mode_str == "stereo") {
-        conf.mode = vstk::CALIB_MODE::STEREO;
+        conf.mode = vstk::CALIB_MODE::STEREO_CAM;
     }
     else {
         ERRORLOG("Unsupported mode %s", mode_str);
@@ -106,11 +106,11 @@ int main(int argc, char *argv[]) {
     vstk::StereoCamParams stereo_params;
 
     switch (config.mode) {
-    case vstk::CALIB_MODE::MONO :
+    case vstk::CALIB_MODE::MONO_CAM :
         mono_params = calibrator.run(config.cam1);
         vstk::write_mono_params(mono_params, config.out_dir + "/cam.yaml");
         break;
-    case vstk::CALIB_MODE::STEREO :
+    case vstk::CALIB_MODE::STEREO_CAM :
         stereo_params = calibrator.run(config);
         vstk::write_stereo_params(stereo_params, config.out_dir + "/stereo_cam.yaml");
     default:

@@ -57,4 +57,5 @@ int vstk::write_stereo_params(vstk::StereoCamParams &params, std::string filenam
 
 int read_stereo_config(vstk::CalibConfig &cfg, std::string filename) {
     INFOLOG("Reading camera parameters");
+    return 0;
 }

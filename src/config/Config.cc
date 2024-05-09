@@ -110,6 +110,7 @@ std::pair<int, int> VstkConfig::get_cell_size_adafast() {
     return this->cell_size_adafast;
 }
 
+
 int VstkConfig::load_from_yaml(std::string filename) {
     int rc = 1;
     cv::FileStorage fs(filename, cv::FileStorage::READ);
@@ -137,6 +138,22 @@ int VstkConfig::load_from_yaml(std::string filename) {
         return rc;
 }
 
+
+int vstk::read_stereo_params(std::string filepath, vstk::StereoCamParams &params) {
+    cv::FileStorage fs = cv::FileStorage(filepath, cv::FileStorage::READ);
+    if(!fs.isOpened()) {
+        return 1;
+    }
+    fs["Cam1K"] >> params.cam1_params.K;
+    fs["Cam1DistCoeffecients"] >> params.cam1_params.dist_coeff;
+    fs["Cam2K"] >> params.cam2_params.K;
+    fs["Cam2DistCoeffecients"] >> params.cam2_params.dist_coeff;
+    fs["Rs"] >> params.Rs;
+    fs["ts"] >> params.ts;
+    fs["Emat"] >> params.E;
+    fs["FMat"] >> params.F;
+    fs.release();
+}
 
 std::string vstk::enum_to_str(vstk::FExtractionAlgorithm algo) {
     std::string str;

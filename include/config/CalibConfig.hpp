@@ -1,27 +1,17 @@
 #include <opencv2/core.hpp>
 #include <vector>
 
+#include "config/Config.hpp"
+
 #ifndef __VSTK_CALIB3D_CONF
 #define __VSTK_CALIB3D_CONF
 
 namespace vstk {
 
     enum CALIB_MODE {
-        MONO,
-        STEREO
+        MONO_CAM,
+        STEREO_CAM
     };
-
-    typedef struct MonoCameraParams {
-        cv::Mat K, dist_coeff;
-        std::vector<cv::Mat> R_vecs, t_vecs;
-        int n_rows, n_cols;
-    } MonoCamParams;
-
-    typedef struct StereoCameraParams {
-        MonoCamParams cam1_params, cam2_params;
-        cv::Mat Rs, ts, E, F;
-        int n_rows, n_cols;
-    } StereoCamParams;
 
     typedef struct MonoCalibConfig {        
         std::string dir_pattern;

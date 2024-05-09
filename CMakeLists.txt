@@ -116,7 +116,7 @@ include_directories(
 # message( "Protocol Buffer Libraries : [OK] :: ${Protobuf_INCLUDE_DIRS}" )
 
 message("\n\n")
-message("==> SYSTEM LIBRARY CHECKS")
+message("==> SYSTEM LIBRARY CHECKS\n")
 check_lib("OpenCV" "OpenCV_LIBS")
 check_lib("Boost" "Boost_LIBRARIES")
 if(TRANSPORT_GRPC)
@@ -129,7 +129,7 @@ if(TRANSPORT_GRPC)
   endif()
 endif()
 
-message("== SYSTEM LIBRARY CHECK COMPLETE\n")
+message("\n== SYSTEM LIBRARY CHECK COMPLETE\n")
 
 if(TRANSPORT_GRPC)
   add_custom_command(
@@ -191,7 +191,7 @@ add_library(
     src/calib/CameraCalibration.cc
     src/config/CalibConfig.cc
 )
-target_link_libraries(calib_kit_vstk  ${Boost_LIBRARIES})
+target_link_libraries(calib_kit_vstk  config_vstk ${Boost_LIBRARIES})
 
 
 
