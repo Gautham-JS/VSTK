@@ -31,12 +31,49 @@ void load_and_publish_image(std::string path, vstk::VstkConfig conf) {
     Serializer serializer;
     DiskIO disk_io(working_dir, "matches");
     vector<string> files = disk_io.list_directory(path);
-    for(int i=0; i<files.size(); i++) {
+    for(size_t i=0; i<files.size(); i++) {
         ImageContextHolder ictx(files[i]);
         extractor.run(ictx);
         vstk::BinaryDataStream *data = serializer.serialize(ictx);
         cerr << i << " : " <<data->data << endl;
     }
+}
+
+VstkConfig read_from_yaml(std::string yaml_file) {
+    VstkConfig cfg;
+    if(cfg.load_from_yaml(yaml_file) != EXIT_SUCCESS) {
+        ERRORLOG("Failed to load configuration from yaml file.");
+    }
+    INFOLOG("Successfully loaded configurations from yaml file.");
+    //INFOLOG("Directory 1 : %s, Directory 2 : %s", cfg.get_ste)
+    INFOLOG("Read ADAFAST Properties: ");
+    INFOLOG("\t --> min_count : %d", cfg.get_min_count_adafast());
+    INFOLOG("\t --> max_count : %d", cfg.get_max_count_adafast());
+    INFOLOG("\t --> min_threshold : %d", cfg.get_min_threshold_adafast());
+    INFOLOG("\t --> max_threshold : %d", cfg.get_max_threshold_adafast());
+    INFOLOG("\t --> cell_size : [%d X %d]", cfg.get_cell_size_adafast().first, cfg.get_cell_size_adafast().second);
+
+    INFOLOG("Camera properties : ");
+    INFOLOG("Left :");
+    INFOLOG("\tK : ");
+    std::cout << cfg.get_stereo_cam_params()->cam1_params.K << endl;
+    INFOLOG("\tDistortion Coeffecients : ");
+    std::cout << cfg.get_stereo_cam_params()->cam1_params.dist_coeff << endl;
+    INFOLOG("Right : ");
+    INFOLOG("\tK : ");
+    std::cout << cfg.get_stereo_cam_params()->cam2_params.K << endl;
+    INFOLOG("\tDistortion Coeffecients : ");
+    std::cout << cfg.get_stereo_cam_params()->cam2_params.dist_coeff << endl;
+    INFOLOG("Rotation Matrix : ");
+    std::cout << cfg.get_stereo_cam_params()->Rs << endl;
+    INFOLOG("Translation Vector : ");
+    std::cout << cfg.get_stereo_cam_params()->ts << endl;
+    INFOLOG("Fundamental Matrix : ");
+    std::cout << cfg.get_stereo_cam_params()->F <<endl;
+    INFOLOG("Essential Matrix : ");
+    std::cout << cfg.get_stereo_cam_params()->E <<endl;
+
+    return cfg;
 }
 
 void run_locally(VstkConfig conf) {
@@ -65,8 +102,8 @@ void run_locally(VstkConfig conf) {
     extractor.run(image);
     DBGLOG("Initial features : %d, Descriptors : %d", image.get_features_holder().kps.size(), image.get_features_holder().descriptors.size());
     image_list.push_back(image);
-    int cur_ptr = 1;
-    int prev_ptr = 0;
+    size_t cur_ptr = 1;
+    size_t prev_ptr = 0;
 
     while (cur_ptr < files.size()) {
         start_timer(t_main);
@@ -101,7 +138,7 @@ void run_locally(VstkConfig conf) {
     }
 }
 
-void bindToGRPC(std::string addr) {
+void bindToGRPC(const std::string &addr) {
     #ifdef VSTK_TRANSPORT_PROTO_GRPC
         INFOLOG("Attempting to bind using grpc to address %s", addr.c_str());
         ImageSvc image_service;
@@ -186,6 +223,12 @@ vstk::VstkConfig build_config_from_args(int argc, char**argv) {
                 abort ();
         }
     }
+
+    if(!config_file_path.empty()) {
+        INFOLOG("Attempting to load configurations from YAML file : %s", config_file_path);
+        conf = read_from_yaml(config_file_path);
+        return conf;
+    }
     
     if(argc - optind < 1) {
         ERRORLOG("Directory not specified");
@@ -214,12 +257,6 @@ vstk::VstkConfig build_config_from_args(int argc, char**argv) {
 }
 
 int main(int argc, char** argv ) {
-
-    int aflag = 0;
-    int bflag = 0;
-    char *cvalue = NULL;
-    int index;
-    int c;
     vstk::VstkConfig conf = build_config_from_args(argc, argv);
     run_locally(conf);
     //bindToGRPC("localhost:34015");

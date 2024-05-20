@@ -40,6 +40,13 @@ std::string generate_uuid_v4() {
     return ss.str();
 }
 
+ImageContextHolder::ImageContextHolder(cv::Mat image) {
+  this->image_data = image;
+  this->image_id = generate_uuid_v4();
+  this->image_width = image.rows;
+  this->image_length = image.cols;
+}
+
 ImageContextHolder::ImageContextHolder(std::string image_path) {
     load_image_path(image_path);
 }
@@ -111,7 +118,7 @@ FeaturesHolder FeatureExtractor::run_internal(ImageContextHolder& image_ctx) {
 
 FeaturesHolder FeatureExtractor::run(ImageContextHolder& image_ctx) {
     if(config.get_feature_extraction_algo() == FExtractionAlgorithm::ADAPTIVE_FAST) {
-        return run_adaptive(image_ctx, 20);
+        return run_adaptive(image_ctx);
     }
     return run_internal(image_ctx);
 }
@@ -134,7 +141,7 @@ DETECT:
         threshold stepped up
         goto DETECT
 */
-FeaturesHolder FeatureExtractor::run_adaptive(ImageContextHolder& image_ctx, int r_depth) {
+FeaturesHolder FeatureExtractor::run_adaptive(ImageContextHolder& image_ctx) {
     FeaturesHolder holder = this->adaptive_extractor->extract(image_ctx);
     this->fcompute->compute(
         image_ctx.get_image(), 

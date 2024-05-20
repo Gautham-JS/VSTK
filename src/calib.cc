@@ -3,11 +3,14 @@
 #include "utils/Logger.hpp"
 
 void print_usage_and_unalive(char *argv[]) {
-    fprintf(stderr, "%s mode (stereo/mono) directory1_pattern (required) directory2_pattern (optional, used for stereo) \n[-s size:string -- checkerboard size represented as {cols}x{rows}]\n\
+    fprintf(stderr, "\n\nUSAGE : \n%s mode (stereo/mono) directory1_pattern (required) directory2_pattern (optional, used for stereo) \n\
+    [-s size:string -- checkerboard size represented as {cols}x{rows}]\n\
     [-o output directory:string -- path to create the calibration outputs]\n\
+    [-f output filename:string -- calibration output file name]\n\
     [-v -- enable verbose mode]\n",
     argv[0]
     );
+    exit(-1);
 }
 
 std::vector<std::string> split(std::string s, std::string delimiter) {
@@ -34,7 +37,7 @@ vstk::CalibConfig build_config_from_args(int argc, char* argv[]) {
     char c;
     opterr = 0;
 
-    while ((c = getopt (argc, argv, "o:s:v")) != -1) {
+    while ((c = getopt (argc, argv, "o:s:f:hv")) != -1) {
         switch (c) {
             case 's':
                 checkerboard_dims = std::string(optarg);
@@ -47,7 +50,13 @@ vstk::CalibConfig build_config_from_args(int argc, char* argv[]) {
             case 'o':
                 conf.out_dir = std::string(optarg);
                 break;
+            case 'f':
+                conf.out_fname = std::string(optarg);
+                break;
 
+            case 'h':
+                print_usage_and_unalive(argv);
+                break;
             default:
                 ERRORLOG("Unknwon option");
                 abort ();
@@ -98,7 +107,7 @@ vstk::CalibConfig build_config_from_args(int argc, char* argv[]) {
 int main(int argc, char *argv[]) {
     if (argc <= 2) {
         ERRORLOG("Calib Mode and File pattern of calibration images not specified");
-        exit(1);
+        print_usage_and_unalive(argv);
     }
     vstk::CalibConfig config = build_config_from_args(argc, argv);
     vstk::CameraCalibrator calibrator(std::make_pair(config.ncols, config.nrows));
@@ -108,11 +117,11 @@ int main(int argc, char *argv[]) {
     switch (config.mode) {
     case vstk::CALIB_MODE::MONO_CAM :
         mono_params = calibrator.run(config.cam1);
-        vstk::write_mono_params(mono_params, config.out_dir + "/cam.yaml");
+        vstk::write_mono_params(mono_params, config.out_dir + "/" + config.out_fname);
         break;
     case vstk::CALIB_MODE::STEREO_CAM :
         stereo_params = calibrator.run(config);
-        vstk::write_stereo_params(stereo_params, config.out_dir + "/stereo_cam.yaml");
+        vstk::write_stereo_params(stereo_params, config.out_dir + "/" + config.out_fname);
     default:
         break;
     }

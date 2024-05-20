@@ -22,6 +22,7 @@ namespace vstk {
         MonoCalibConfig cam1, cam2;
         int nrows, ncols;
         std::string out_dir;
+        std::string out_fname = "stereo_params.yaml";
         CALIB_MODE mode;
     } CalibConfig;
 

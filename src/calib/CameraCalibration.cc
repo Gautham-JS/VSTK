@@ -9,6 +9,24 @@
 
 using namespace vstk;
 
+#define POINT_SIZE_LIMIT 100
+
+
+void point_downsample(
+    std::vector<std::vector<cv::Point2f>> image_pts, 
+    std::vector<std::vector<cv::Point3f>> obj_pts, 
+    std::vector<std::vector<cv::Point2f>> &image_pts_out, 
+    std::vector<std::vector<cv::Point3f>> &obj_pts_out, 
+    int sample_size) {
+  DBGLOG("Downsampling to every %dth point", sample_size);
+  image_pts_out.clear();
+  obj_pts_out.clear();
+  for(int i=0; i<image_pts.size(); i+=sample_size) {
+    image_pts_out.push_back(image_pts[i]);
+    obj_pts_out.push_back(obj_pts[i]);
+  } 
+}
+
 
 
 CameraCalibrator::CameraCalibrator(std::pair<int, int> cb_dimensions) : checkerboard_size(cb_dimensions) {}
@@ -41,7 +59,7 @@ MonoCamParams CameraCalibrator::run(MonoCalibConfig &cfg) {
 
     INFOLOG("Running calibration for single camera with %ld frames and checkerboard dimensions [%d X %d]", cfg.filenames.size(), checkerboard_size.first, checkerboard_size.second);
 
-    for (int i=0; i<cfg.filenames.size(); i+=40) {
+    for (int i=0; i<cfg.filenames.size(); i+=60) {
         frame = cv::imread(cfg.filenames[i]);
         INFOLOG("Processing image %s", cfg.filenames[i]);
         cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
@@ -104,7 +122,7 @@ StereoCamParams CameraCalibrator::run(CalibConfig &cfg) {
 
     INFOLOG("Running calibration for stereo camera with %ld frames and checkerboard dimensions [%d X %d]", cfg.cam1.filenames.size(), checkerboard_size.first, checkerboard_size.second);
 
-    for (int i=0; i<cfg.cam1.filenames.size(); i+=40) {
+    for (int i=0; i<cfg.cam1.filenames.size(); i++) {
         im1 = cv::imread(cfg.cam1.filenames[i]);
         im2 = cv::imread(cfg.cam2.filenames[i]);
         cv::cvtColor(im1, frame1, cv::COLOR_BGR2GRAY);
@@ -139,6 +157,27 @@ StereoCamParams CameraCalibrator::run(CalibConfig &cfg) {
             exit(0);
         }
     }
+    INFOLOG("Iterative point sampling complete, total samples : %ld", obj_pts1.size());
+
+    if(image_pts1.size() > POINT_SIZE_LIMIT) {
+      WARNLOG("Samples exceed compute limit of %d samples, downsampling...", POINT_SIZE_LIMIT);
+      int iter = 0;
+      std::vector<std::vector<cv::Point2f>> image_pts1_ds, image_pts2_ds;
+      std::vector<std::vector<cv::Point3f>> obj_pts1_ds, obj_pts2_ds;
+      while(image_pts1.size() > POINT_SIZE_LIMIT) {
+        if(iter > 100) {
+          ERRORLOG("Iterations exceeded limit, aboriting.");
+          exit(-1);
+        }
+        iter++;
+        point_downsample(image_pts1, obj_pts1, image_pts1_ds, obj_pts1_ds, 2);
+        point_downsample(image_pts2, obj_pts2, image_pts2_ds, obj_pts2_ds, 2);
+        image_pts1 = image_pts1_ds;
+        image_pts2 = image_pts2_ds;
+        obj_pts1 = obj_pts1_ds;
+        obj_pts2 = obj_pts2_ds;
+      }      
+    }
     INFOLOG("Iterative point detection complete, computing intrinsic and extrinsic camera matrices...");
 
     cv::destroyAllWindows();
@@ -169,3 +208,8 @@ StereoCamParams CameraCalibrator::run(CalibConfig &cfg) {
     std::cout << "distCoeffs 2 : " << params.cam2_params.dist_coeff << std::endl;
     return params;
 }
+
+
+
+
+

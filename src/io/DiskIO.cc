@@ -20,6 +20,11 @@ vstk::DiskIO::DiskIO(std::string base_directory)
 //     this->create_base_dir();
 }
 
+vstk::DiskIO::DiskIO() {
+    base_directory = "/tmp/vstk/data";
+    working_directory = "/tmp/vstk/var";
+}
+
 vstk::DiskIO::DiskIO(std::string base_directory, std::string working_directory) 
     : base_directory(base_directory), working_directory(working_directory) {
         this->create_base_dir();

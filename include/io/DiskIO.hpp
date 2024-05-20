@@ -33,6 +33,7 @@ namespace vstk {
             std::string get_working_directory();
 
         public :
+            explicit DiskIO();
             explicit DiskIO(std::string base_directory);
             explicit DiskIO(std::string base_directory, std::string working_dirtectory);
 

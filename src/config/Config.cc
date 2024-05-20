@@ -115,28 +115,106 @@ int VstkConfig::load_from_yaml(std::string filename) {
     int rc = 1;
     cv::FileStorage fs(filename, cv::FileStorage::READ);
     cv::FileNode node;
+
+    set_cfg<std::string>(fs["directory_pattern_l"], this->stereo_im1_source);
+    set_cfg<std::string>(fs["directory_pattern_r"], this->stereo_im2_source);
     
-    node = fs["adafast"];
+
+    rc = load_adafast_properties(fs["adafast"]);
+    rc = load_detector_properties(fs["sparse_detector"]);
+    rc = load_camera_properties(fs["cam_params"]);
+    return rc;
+}
+
+int VstkConfig::load_adafast_properties(cv::FileNode node) {
+    int rc = ERROR_GENERIC;
     if(!node.empty()) {
         // configure adafast properties
-        this->set_cfg <int> (node["min_count"], this->min_count_adafast);   
-        this->set_cfg <int> (node["max_count"], this->max_count_adafast);
-        this->set_cfg <int> (node["min_threshold"], this->min_threshold_adafast);
-        this->set_cfg <int> (node["max_threshold"], this->max_threshold_adafast);
+        rc = this->set_cfg <int> (node["min_count"], this->min_count_adafast);   
+        rc = this->set_cfg <int> (node["max_count"], this->max_count_adafast);
+        rc = this->set_cfg <int> (node["min_threshold"], this->min_threshold_adafast);
+        rc = this->set_cfg <int> (node["max_threshold"], this->max_threshold_adafast);
 
         int x = cell_size_adafast.first, y = cell_size_adafast.second;
-        this->set_cfg <int> (node["cell_size_x"], x);
-        this->set_cfg <int> (node["cell_size_y"], y);
+        rc = this->set_cfg <int> (node["cell_size_x"], x);
+        rc = this->set_cfg <int> (node["cell_size_y"], y);
         this->cell_size_adafast = std::make_pair(x, y);
 
-        this->set_cfg(node["threshold_step_size"], this->threshold_step_size_adafast);
+        rc = this->set_cfg(node["threshold_step_size"], this->threshold_step_size_adafast);
+        rc = 0;
     } 
-
-    
-
-    RETURN_BLOCK:
-        return rc;
+    return rc;
 }
+
+int VstkConfig::load_detector_properties(cv::FileNode node) {
+    int rc = ERROR_GENERIC;
+    if(!node.empty()) {
+        // configure feature detector & matcher properties;
+        std::string e_algorithm;
+        std::string d_algorithm;
+        std::string m_algorithm;
+
+        rc = set_cfg <std::string> (node["feature_extraction_algorithm"], e_algorithm);
+        this->set_feature_extraction_algo(extractor_algo_str_to_enum(e_algorithm));
+
+        rc = set_cfg <std::string> (node["descriptor_compute_algorithm"], d_algorithm);
+        this->set_descriptor_compute_algo(desc_compute_algo_str_to_enum(d_algorithm));
+
+        rc = set_cfg<std::string> (node["matcher_algorithm"], m_algorithm);
+        this->set_match_algo(matcher_algo_str_to_enum(m_algorithm)); 
+    }
+    return rc;
+}
+
+int VstkConfig::load_camera_properties(cv::FileNode node) {
+    int rc = ERROR_GENERIC;
+    StereoCamParams stereo_params;
+
+    if (!node.empty()) {
+        cv::FileNode stereo_props;
+        stereo_props = node["stereo_cam_params"];
+        if (!stereo_props.empty()) {
+            cv::FileNode left_cam, right_cam;
+            left_cam = stereo_props["left_cam"];
+            right_cam = stereo_props["right_cam"];
+            rc = this->set_cfg <cv::Mat> (stereo_props["Rs"], stereo_params.Rs);
+            rc = this->set_cfg <cv::Mat> (stereo_props["ts"], stereo_params.ts);
+            rc = this->set_cfg <cv::Mat> (stereo_props["FMat"], stereo_params.F);
+            rc = this->set_cfg <cv::Mat> (stereo_props["EMat"], stereo_params.E);
+            
+            if (!left_cam.empty() && !right_cam.empty()) {
+                rc = this->set_cfg <cv::Mat> (left_cam["K"], stereo_params.cam1_params.K);
+                rc = this->set_cfg <cv::Mat> (left_cam["dist_coeff"], stereo_params.cam1_params.dist_coeff);
+                rc = this->set_cfg <cv::Mat> (right_cam["K"], stereo_params.cam2_params.K);
+                rc = this->set_cfg <cv::Mat> (right_cam["dist_coeff"], stereo_params.cam2_params.dist_coeff);
+                this->set_stereo_cam_params(std::make_shared<StereoCamParams>(stereo_params));  
+            }
+        }
+    }
+    return rc;
+}
+
+
+
+void vstk::VstkConfig::set_stereo_cam_params(std::shared_ptr<StereoCamParams> stereo_params) {
+    this->stereo_cam_params = std::move(stereo_params);
+}
+
+void vstk::VstkConfig::set_mono_cam_params(std::shared_ptr<MonoCamParams> mono_params) {
+    this->mono_cam_params = std::move(mono_params);
+}
+
+std::shared_ptr<vstk::StereoCamParams> vstk::VstkConfig::get_stereo_cam_params() {
+    return this->stereo_cam_params;
+}
+
+std::shared_ptr<vstk::MonoCamParams> vstk::VstkConfig::get_mono_cam_params() {
+    return std::move(this->mono_cam_params);
+}
+
+
+
+
 
 
 int vstk::read_stereo_params(std::string filepath, vstk::StereoCamParams &params) {
@@ -153,11 +231,15 @@ int vstk::read_stereo_params(std::string filepath, vstk::StereoCamParams &params
     fs["Emat"] >> params.E;
     fs["FMat"] >> params.F;
     fs.release();
+    return 0;
 }
 
 std::string vstk::enum_to_str(vstk::FExtractionAlgorithm algo) {
     std::string str;
     switch (algo) {
+    case FExtractionAlgorithm::ADAPTIVE_FAST :
+        str = "ADAPTIVE FAST";
+        break;
     case FExtractionAlgorithm::ORB :
         str = "ORB";
         break;
@@ -172,6 +254,37 @@ std::string vstk::enum_to_str(vstk::FExtractionAlgorithm algo) {
         break;
     }
     return str;
+}
+
+vstk::FExtractionAlgorithm vstk::extractor_algo_str_to_enum(std::string f_algorithm) {
+    FExtractionAlgorithm f_algorithm_enum;
+    for (auto & ch: f_algorithm) ch = toupper(ch);
+    
+    if(f_algorithm == "ADA_FAST" || f_algorithm == "ADAFAST") f_algorithm_enum = vstk::FExtractionAlgorithm::ADAPTIVE_FAST;
+    if(f_algorithm == "FAST") f_algorithm_enum = vstk::FExtractionAlgorithm::FAST;
+    if(f_algorithm == "ORB") f_algorithm_enum = vstk::FExtractionAlgorithm::ORB;
+    if(f_algorithm == "SIFT") f_algorithm_enum = vstk::FExtractionAlgorithm::SIFT;
+    return f_algorithm_enum;
+}
+
+vstk::MatchAlgorithm vstk::matcher_algo_str_to_enum(std::string m_algorithm) {
+    MatchAlgorithm m_algorithm_enum;
+    for (auto & ch: m_algorithm) ch = toupper(ch);
+
+    if(m_algorithm == "FLANN")          m_algorithm_enum = vstk::MatchAlgorithm::FLANN;
+    if(m_algorithm == "BF")             m_algorithm_enum = vstk::MatchAlgorithm::BF;
+    if(m_algorithm == "BF_HAMMING")     m_algorithm_enum = vstk::MatchAlgorithm::BF_HAMMING;
+    return m_algorithm_enum;
+}
+
+vstk::DComputeAlgorithm vstk::desc_compute_algo_str_to_enum(std::string d_algorithm) {
+    DComputeAlgorithm d_compute_algorithm_enum;
+    for (auto & ch: d_algorithm) ch = toupper(ch);
+
+    if(d_algorithm == "ORB")            d_compute_algorithm_enum = vstk::DComputeAlgorithm::ORB;
+    if(d_algorithm == "BRIEF")          d_compute_algorithm_enum = vstk::DComputeAlgorithm::BRIEF;
+    if(d_algorithm == "SIFT")           d_compute_algorithm_enum = vstk::DComputeAlgorithm::SIFT;
+    return d_compute_algorithm_enum;
 }
 
 std::string vstk::enum_to_str(DComputeAlgorithm algo) {

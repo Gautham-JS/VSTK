@@ -45,17 +45,30 @@ namespace vstk {
         BRIEF
     };
 
-    typedef struct MonoCameraParams {
-        cv::Mat K, dist_coeff;
-        std::vector<cv::Mat> R_vecs, t_vecs;
-        int n_rows, n_cols;
-    } MonoCamParams;
+    enum CFG_LOAD_RETURN_CODES {
+        OK = 0,
+        ERROR_GENERIC = 1,
+        ERROR_FORMAT = 2,
+        ERROR_FILE_UNDEF = 3,
+        ERROR_PROP_UNDEF = 4,
+    };
 
-    typedef struct StereoCameraParams {
-        MonoCamParams cam1_params, cam2_params;
-        cv::Mat Rs, ts, E, F;
-        int n_rows, n_cols;
-    } StereoCamParams;
+    class MonoCamParams {
+        public:
+            cv::Mat K, dist_coeff;
+            std::vector<cv::Mat> R_vecs, t_vecs;
+            int n_rows, n_cols;
+    };
+
+    class StereoCamParams {
+        public:
+            MonoCamParams cam1_params, cam2_params;
+            cv::Mat Rs;
+            cv::Mat ts; 
+            cv::Mat E;
+            cv::Mat F;
+            int n_rows, n_cols;
+    };
 
     int read_stereo_params(std::string filepath, StereoCamParams &params);
 
@@ -72,6 +85,9 @@ namespace vstk {
             DComputeAlgorithm descriptor_compute_algo = DComputeAlgorithm::ORB;
             MatchAlgorithm match_algo = MatchAlgorithm::BF;
 
+            std::shared_ptr<StereoCamParams> stereo_cam_params = nullptr;
+            std::shared_ptr<MonoCamParams> mono_cam_params = nullptr;
+
             std::string run_data_source, stereo_im1_source, stereo_im2_source;
             std::string working_dir;
             std::string config_file;
@@ -85,8 +101,13 @@ namespace vstk {
             std::pair<int, int> cell_size_adafast = std::make_pair(3, 3);
 
             template<typename T>
-            inline void set_cfg(cv::FileNode node, T &property) {
-                if(!node.empty()) property = (T) node;
+            inline int set_cfg(cv::FileNode node, T &property) {
+                int rc = ERROR_PROP_UNDEF;
+                if(!node.empty()) { 
+                    node >> property;
+                    rc = OK;
+                }
+                return rc;
             }
 
 
@@ -95,7 +116,11 @@ namespace vstk {
             VstkConfig(RunType run_type, std::string working_dir, LoadScheme loading_scheme);
             VstkConfig();
 
+            // Config file loading functions
             int load_from_yaml(std::string filepath);
+            int load_adafast_properties(cv::FileNode node);
+            int load_detector_properties(cv::FileNode node);
+            int load_camera_properties(cv::FileNode node);
 
             void set_working_dir(std::string working_dir);
             void set_run_data_src(std::string run_data_dir);
@@ -106,12 +131,22 @@ namespace vstk {
             void set_match_algo(MatchAlgorithm algorithm);
             void set_num_features_retained(int num_features);
             void set_slam_type(SLAMType type);
+            void set_stereo_cam_params(std::shared_ptr<StereoCamParams> stereo_params);
+            void set_mono_cam_params(std::shared_ptr<MonoCamParams> mono_params);
 
             RunType get_run_type();
             LoadScheme get_load_scheme();
             std::string get_working_dir();
             std::string get_run_data_src();
             int get_num_features_retained();
+            inline std::string get_stereo_src_1() {
+              return this->stereo_im1_source;
+            }
+
+            inline std::string get_stereo_src_2() {
+              return this->stereo_im1_source;
+            }
+
             
 
             bool is_config_file_used();
@@ -133,7 +168,9 @@ namespace vstk {
             FExtractionAlgorithm get_feature_extraction_algo();
             DComputeAlgorithm get_descriptor_compute_algo();
             MatchAlgorithm get_match_algorithm();
-            
+
+            std::shared_ptr<StereoCamParams> get_stereo_cam_params();
+            std::shared_ptr<MonoCamParams> get_mono_cam_params();
     };
 
     std::string enum_to_str(FExtractionAlgorithm algo);
@@ -141,6 +178,10 @@ namespace vstk {
     std::string enum_to_str(DComputeAlgorithm algo);
 
     std::string enum_to_str(MatchAlgorithm algo);
+
+    FExtractionAlgorithm extractor_algo_str_to_enum(std::string f_algorithm);
+    MatchAlgorithm matcher_algo_str_to_enum(std::string m_algorithm);
+    DComputeAlgorithm desc_compute_algo_str_to_enum(std::string d_algorithm);
 }
 
 #endif

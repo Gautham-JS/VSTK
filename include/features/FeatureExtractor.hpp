@@ -54,6 +54,7 @@ namespace vstk {
 
             void init();
         public:
+            explicit ImageContextHolder(cv::Mat image);
             explicit ImageContextHolder(std::string image_path);
             explicit ImageContextHolder(unsigned char *image_data, uint32_t image_width, uint32_t image_length);
             explicit ImageContextHolder();
@@ -80,7 +81,7 @@ namespace vstk {
             void down_step_threshold(int cell_idx);
             void up_step_threshold(int cell_idx);
         public:
-            AdaptiveFastExtractor(VstkConfig config);
+            explicit AdaptiveFastExtractor(VstkConfig config);
             FeaturesHolder extract(ImageContextHolder &image);
     };
 
@@ -103,7 +104,7 @@ namespace vstk {
         public:
             explicit FeatureExtractor(VstkConfig config);
             FeaturesHolder run(ImageContextHolder &image_ctx);
-            FeaturesHolder run_adaptive(ImageContextHolder &image_ctx, int r_depth);
+            FeaturesHolder run_adaptive(ImageContextHolder &image_ctx);
             void display_features(ImageContextHolder image_ctx);
             void reset();
     };

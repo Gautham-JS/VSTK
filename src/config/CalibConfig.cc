@@ -38,18 +38,32 @@ int vstk::write_stereo_params(vstk::StereoCamParams &params, std::string filenam
     if(!fs.isOpened()) {
         return 1;
     }
-    fs << "Cam1K" << params.cam1_params.K;
-    fs << "Cam1DistCoeffecients" << params.cam1_params.dist_coeff;
+    
+    fs.startWriteStruct("cam_params", cv::FileNode::MAP);
+    fs.startWriteStruct("stereo_cam_params", cv::FileNode::MAP);
+    fs.startWriteStruct("left_cam", cv::FileNode::MAP);     
 
-    fs << "Cam2K" << params.cam2_params.K;
-    fs << "Cam2DistCoeffecients" << params.cam2_params.dist_coeff;
+    fs << "K" << params.cam1_params.K;
+    fs << "dist_coeff" << params.cam1_params.dist_coeff;
+    
+    fs.endWriteStruct();                                                // close left cam intrinsics
+    fs.startWriteStruct("right_cam", cv::FileNode::MAP);                // start right cam intrinsics
 
-    fs << "EMat" << params.E;
-    fs << "FMat" << params.F; 
+    fs << "K" << params.cam2_params.K;
+    fs << "dist_coeff" << params.cam2_params.dist_coeff;
+    
+    fs.endWriteStruct();                                                // close right cam intrinsics
+    
+    // Extrinsic params shared between cameras.
 
-    fs << "Rs" << params.Rs;
-    fs << "ts" << params.ts;
+    fs << "EMat" << params.E;                                           // Essential Matrix
+    fs << "FMat" << params.F;                                           // Fundamental Matrix
 
+    fs << "Rs" << params.Rs;                                            // Cam Rotation Matrix (3x3)
+    fs << "ts" << params.ts;                                            // Cam Translation Vector (3x1)
+
+    fs.endWriteStruct();                                                // close "stereo_cam_params" section
+    fs.endWriteStruct();                                                // close "cam_params" section
 
     fs.release();
     return 0;
