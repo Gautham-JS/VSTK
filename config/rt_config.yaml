@@ -1,0 +1,21 @@
+%YAML:1.0
+---
+
+
+directory_pattern_l: "/mnt/c/Data/Euroc/mav0/cam0/data/*.png"
+directory_pattern_r: "/mnt/c/Data/Euroc/mav0/cam1/data/*.png"
+
+sparse_detector:
+  feature_extraction_algorithm: "adafast"
+  descriptor_compute_algorithm: "orb"
+  matcher_algorithm: "flann"
+  
+adafast:
+  min_count: 200
+  max_count: 1000
+  min_threshold : 10
+  max_threshold : 100
+  cell_size_x : 3
+  cell_size_y : 3
+  threshold_step_size : 10
+
