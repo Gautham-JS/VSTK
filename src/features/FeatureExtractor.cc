@@ -248,47 +248,101 @@ void AdaptiveFastExtractor::up_step_threshold(int cell_idx) {
     detectors[cell_idx] = cv::FastFeatureDetector::create(thresholds[cell_idx]);
 }
 
+int AdaptiveFastExtractor::process_cell(
+    cv::Mat cell, 
+    std::vector<cv::KeyPoint> &kps, 
+    int cell_idx, 
+    std::pair<int, int> origin,
+    int min_feature_count, 
+    int max_feature_count
+) {
+    kps.clear();
+    extract_internal(cell, kps, cell_idx, origin);
+    size_t n = kps.size();
+    int adj_iters = 0;
+
+    DBGLOG("Detected %ld features in cell %d with threshold %d", n, cell_idx, thresholds[cell_idx]);
+
+    while(n < min_feature_count && thresholds[cell_idx] > fth_min) {
+        DBGLOG("Too few features in cell %d with threshold %d, decrementing cell threshold", cell_idx, thresholds[cell_idx]);
+        down_step_threshold(cell_idx);
+        WARNLOG("New threshold : %d", thresholds[cell_idx]);
+        kps.clear();
+        extract_internal(cell, kps, cell_idx, origin);
+        n = kps.size();
+        adj_iters++;
+    }
+
+    while(n > max_feature_count && thresholds[cell_idx] < fth_max) {
+        DBGLOG("Too many features in cell %d with threshold %d, incrementing cell threshold", cell_idx, thresholds[cell_idx]);
+        up_step_threshold(cell_idx);
+        kps.clear();
+        extract_internal(cell, kps, cell_idx, origin);
+        n = kps.size();
+        adj_iters++;
+    }
+    return adj_iters;
+
+}
+
 FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
     FeaturesHolder holder;
+    boost::asio::thread_pool threadpool(10);
     cv::Mat im = im_ctx.get_image();
     std::vector<std::pair<int, int>> cell_origins;
     std::vector<cv::Mat> cells = vstk::split_image(im, cell_size.first, cell_size.second, cell_origins);
-    int adj_iters = 0;
+
+    // minimum and max feature counts to be extracted per cell.
     int nc_max = n_max / cells.size();
     int nc_min = n_min / cells.size();
+    std::vector<std::vector<cv::KeyPoint>> cell_keypoint_set(cells.size());
+    std::vector<int> adj_iters(cells.size(), 0);
+    std::vector<std::shared_future<int>> cell_rc_set;
+
+    //FILE *fptr = fopen("/home/gjs/software/vstk/asyncadafast.txt", "a+");
+
 
     if(nc_max < 1) nc_max = 1;
     if(nc_min < 1) nc_min = 1;
+    Timer t_extractor = get_timer("ADAFAST Multithreaded Extractor");
+    start_timer(t_extractor);
     DBGLOG("Adaptive detector : cells : %ld,  min_feature per cell : %d, max_feature per cell : %d", cells.size(), nc_min, nc_max);
     for(int i=0; i<cells.size(); i++) {
-        std::vector<cv::KeyPoint> cell_kps;
-        extract_internal(cells[i], cell_kps, i, cell_origins[i]);
-        size_t n = cell_kps.size();
-        DBGLOG("Detected %ld features in cell %d with threshold %d", n, i, thresholds[i]);
-        while(n < nc_min && thresholds[i] > fth_min) {
-            WARNLOG("Too few features in cell %d with threshold %d, decrementing cell threshold", i, thresholds[i]);
-            down_step_threshold(i);
-            WARNLOG("New threshold : %d", thresholds[i]);
-            cell_kps.clear();
-            extract_internal(cells[i], cell_kps, i, cell_origins[i]);
-            n = cell_kps.size();
-            adj_iters++;
-        }
-
-        while(n > nc_max && thresholds[i] < fth_max) {
-            WARNLOG("Too many features in cell %d with threshold %d, incrementing cell threshold", i, thresholds[i]);
-            up_step_threshold(i);
-            cell_kps.clear();
-            extract_internal(cells[i], cell_kps, i, cell_origins[i]);
-            n = cell_kps.size();
-            adj_iters++;
-        }
-
-        holder.kps.insert(std::end(holder.kps), std::begin(cell_kps), std::end(cell_kps));
+        std::packaged_task<int()> task( 
+            [cells, &cell_keypoint_set, i, cell_origins, nc_min, nc_max, this]  
+            {
+                return this->process_cell(cells[i], cell_keypoint_set[i], i, cell_origins[i], nc_min, nc_max); 
+            }
+        );
+        std::shared_future<int> rc_future = boost::asio::post(threadpool, std::move(task));
+        cell_rc_set.push_back(rc_future);
     }
+
+    // for(int i=0; i<cells.size(); i++) {
+    //     adj_iters[i] += process_cell(cells[i], cell_keypoint_set[i], i, cell_origins[i], nc_min, nc_max);
+    //     holder.kps.insert(std::end(holder.kps), std::begin(cell_keypoint_set[i]), std::end(cell_keypoint_set[i]));
+    // }
+    
+    INFOLOG("Dispatched all cellular adafast extractor processes to thread pool, waiting for completion...");
+    threadpool.join();
+    threadpool.wait();
+    for(int i=0; i<cells.size(); i++) {
+        adj_iters[i] += cell_rc_set[i].get();
+        holder.kps.insert(std::end(holder.kps), std::begin(cell_keypoint_set[i]), std::end(cell_keypoint_set[i]));
+    }
+    INFOLOG("Completed synchronous extractor processes.");
+    end_timer(t_extractor);
+    log_timer(t_extractor, stderr);
+    //log_timer(t_extractor, fptr);
+    //fclose(fptr);
+    int n_iters = 0;
+    for(int i : adj_iters) {
+        n_iters += i;
+    }
+
     INFOLOG("Adaptive FAST extractor summary : Total points : %ld, Threshold Adjustments : %d for %ld (%dx%d) cells", 
         holder.kps.size(), 
-        adj_iters,
+        n_iters,
         cells.size(),
         this->cell_size.first,
         this->cell_size.second

@@ -3,9 +3,14 @@
 #include <memory.h>
 #include <string.h>
 #include <utility>
+#include <thread>
+#include <future>
+
+#include <boost/asio.hpp>
 
 #include "config/Config.hpp"
 #include "utils/Logger.hpp"
+#include "utils/TimerUtils.hpp"
 
 #ifndef __FEATURE_EXTRACTOR_H
 #define __FEATURE_EXTRACTOR_H
@@ -40,6 +45,11 @@ namespace vstk {
         int num_views;
         cv::KeyPoint kp;
     } ImageFeaturePt;
+
+    typedef struct AdaFastCellResult {
+        int n_iters = 0;
+        std::vector<cv::KeyPoint> kps;
+    } AdaFastCellResult;
 
 
 
@@ -77,9 +87,19 @@ namespace vstk {
             int fth_min, fth_max, th_step;
             std::vector<cv::Ptr<cv::Feature2D>> detectors;
             std::vector<int> thresholds;
+            cv::Mat debug_threshold_map;
+
             void extract_internal(cv::Mat image, std::vector<cv::KeyPoint> &kps, int cell_idx, std::pair<int, int> origin);
             void down_step_threshold(int cell_idx);
             void up_step_threshold(int cell_idx);
+            int process_cell(
+                cv::Mat image, 
+                std::vector<cv::KeyPoint> &kps, 
+                int cell_idx, 
+                std::pair<int, int> origin, 
+                int min_feature_count, 
+                int max_feature_count
+            );
         public:
             explicit AdaptiveFastExtractor(VstkConfig config);
             FeaturesHolder extract(ImageContextHolder &image);

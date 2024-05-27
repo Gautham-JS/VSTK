@@ -6,6 +6,9 @@
 #define __STEREO_PIPELINE_H
 
 #include "utils/Logger.hpp"
+#include "utils/TimerUtils.hpp"
+
+#include "io/DiskIO.hpp"
 #include "features/FeatureExtractor.hpp"
 #include "features/FeatureMatcher.hpp"
 #include "config/Config.hpp"

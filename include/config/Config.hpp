@@ -98,6 +98,7 @@ namespace vstk {
             int min_threshold_adafast = 10;
             int max_threshold_adafast = 100;
             int threshold_step_size_adafast = 10;
+            int adafast_thread_count = 4;
             std::pair<int, int> cell_size_adafast = std::make_pair(3, 3);
 
             template<typename T>

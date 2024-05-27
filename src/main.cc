@@ -4,6 +4,7 @@
 
 #include "opencv2/opencv.hpp"
 
+#include "pipelines/StereoPipeline.hpp"
 #include "features/FeatureExtractor.hpp"
 #include "features/FeatureMatcher.hpp"
 #include "utils/Logger.hpp"
@@ -11,6 +12,7 @@
 #include "io/DiskIO.hpp"
 #include "io/Serializer.hpp"
 #include "utils/TimerUtils.hpp"
+
 
 #ifdef VSTK_TRANSPORT_PROTO_GRPC
     #include "grpcpp/grpcpp.h"
@@ -77,65 +79,8 @@ VstkConfig read_from_yaml(std::string yaml_file) {
 }
 
 void run_locally(VstkConfig conf) {
-
-    DBGLOG(
-        "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n=========================================================\n", 
-        vstk::enum_to_str(conf.get_feature_extraction_algo()), 
-        vstk::enum_to_str(conf.get_descriptor_compute_algo()),
-        vstk::enum_to_str(conf.get_match_algorithm())
-    );
-
-    // load_and_publish_image(path, conf);
-    // exit(-1);
-
-
-    DiskIO disk_io(working_dir, "matches");
-    vector<string> files = disk_io.list_directory(conf.get_run_data_src());
-    vector<ImageContextHolder> image_list;
-    
-    Timer t_main = get_timer("Main");
-    ImageContextHolder image(files[0]);
-    FeatureExtractor extractor(conf);
-    FeatureMatcher matcher(conf);
-    Serializer serializer;
-
-    extractor.run(image);
-    DBGLOG("Initial features : %d, Descriptors : %d", image.get_features_holder().kps.size(), image.get_features_holder().descriptors.size());
-    image_list.push_back(image);
-    size_t cur_ptr = 1;
-    size_t prev_ptr = 0;
-
-    while (cur_ptr < files.size()) {
-        start_timer(t_main);
-        INFOLOG("Loading image [ %d / %d ]", cur_ptr, files.size() - 1);
-        DBGLOG("Prev PTR : %d, Cur PTR : %d", prev_ptr, cur_ptr);
-        
-        ImageContextHolder prev_image = image_list[prev_ptr];        
-        ImageContextHolder curr_image(files[cur_ptr]);
-        extractor.run(curr_image);
-        MatchesHolder match_holder = matcher.run(curr_image, prev_image);
-        DBGLOG("Detected %d features.", match_holder.good_matches.size());
-
-        if(match_holder.good_matches.size() == 0) {
-            WARNLOG("No good quality matches, rejecting image pair");
-            cur_ptr++;
-            continue;
-        }
-        matcher.display_match_overlap(curr_image, prev_image, match_holder);
-        if(match_holder.good_matches.size() > 40) {
-            INFOLOG("[SKIP] Tracking quality way too good, ommiting current frame due to insignificant motion.");
-            curr_image.clear_image_data();
-        }
-        else {
-            INFOLOG("[INSERT] Diminishing match quantity, inserting reference image & clearing image %d from memory", prev_ptr);
-            image_list[prev_ptr].clear_image_data();
-            image_list.emplace_back(curr_image);
-            prev_ptr++;
-        }
-        end_timer(t_main);
-        log_fps(t_main, stdout);
-        cur_ptr++;
-    }
+  StereoPipeline pipeline(conf);
+  pipeline.run();
 }
 
 void bindToGRPC(const std::string &addr) {

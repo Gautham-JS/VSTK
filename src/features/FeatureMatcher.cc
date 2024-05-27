@@ -131,8 +131,9 @@ void FeatureMatcher::display_match_overlap(ImageContextHolder current_image, Ima
     }
     cv::Mat curr_image_data = current_image.get_image();
     cv::putText(curr_image_data, "Original Image", cv::Point(0, 0), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 255, 255), 1);
-    cv::hconcat(curr_image_data, img, img);
-    cv::hconcat(img, img_delta ,joined);
+    cv::vconcat(curr_image_data, img, img);
+    cv::vconcat(img, img_delta ,joined);
+    
     cv::imshow("FLANN Matches", joined);
     int key = (cv::waitKey(1) & 0xFF);
     if(key == 'q') {

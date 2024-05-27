@@ -175,8 +175,14 @@ add_library(
     src/io/DiskIO.cc
     src/io/Serializer.cc
 )
-
 target_link_libraries(io_vstk  ${Boost_LIBRARIES})
+
+
+add_library(
+    pipelines_vstk SHARED
+    src/pipelines/StereoPipeline.cc
+)
+target_link_libraries(pipelines_vstk  ${Boost_LIBRARIES})
 
 add_library(
     utils_vstk SHARED
@@ -199,7 +205,7 @@ add_executable( vstk src/main.cc )
 
 target_link_libraries( vstk ${Boost_LIBRARIES})
 
-target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk)
+target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk)
 target_link_libraries( vstk ${OpenCV_LIBS})
 
 add_executable( calib_kit src/calib.cc )
