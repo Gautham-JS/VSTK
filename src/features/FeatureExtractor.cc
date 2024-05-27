@@ -211,7 +211,8 @@ AdaptiveFastExtractor::AdaptiveFastExtractor(VstkConfig config) :
     cell_size(config.get_cell_size_adafast()),
     fth_max(config.get_max_threshold_adafast()),
     fth_min(config.get_min_threshold_adafast()),
-    th_step(config.get_threshold_step_size_adafast()) 
+    th_step(config.get_threshold_step_size_adafast()) ,
+    conf(config)
 {
     size_t cell_length = this->cell_size.first * this->cell_size.second;
     this->thresholds = std::vector<int>(cell_length, 20);
@@ -266,7 +267,7 @@ int AdaptiveFastExtractor::process_cell(
     while(n < min_feature_count && thresholds[cell_idx] > fth_min) {
         DBGLOG("Too few features in cell %d with threshold %d, decrementing cell threshold", cell_idx, thresholds[cell_idx]);
         down_step_threshold(cell_idx);
-        WARNLOG("New threshold : %d", thresholds[cell_idx]);
+        DBGLOG("New threshold : %d", thresholds[cell_idx]);
         kps.clear();
         extract_internal(cell, kps, cell_idx, origin);
         n = kps.size();
@@ -287,7 +288,7 @@ int AdaptiveFastExtractor::process_cell(
 
 FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
     FeaturesHolder holder;
-    boost::asio::thread_pool threadpool(10);
+    boost::asio::thread_pool threadpool(conf.get_adafast_threadpool_size());
     cv::Mat im = im_ctx.get_image();
     std::vector<std::pair<int, int>> cell_origins;
     std::vector<cv::Mat> cells = vstk::split_image(im, cell_size.first, cell_size.second, cell_origins);
@@ -299,13 +300,9 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
     std::vector<int> adj_iters(cells.size(), 0);
     std::vector<std::shared_future<int>> cell_rc_set;
 
-    //FILE *fptr = fopen("/home/gjs/software/vstk/asyncadafast.txt", "a+");
-
 
     if(nc_max < 1) nc_max = 1;
     if(nc_min < 1) nc_min = 1;
-    Timer t_extractor = get_timer("ADAFAST Multithreaded Extractor");
-    start_timer(t_extractor);
     DBGLOG("Adaptive detector : cells : %ld,  min_feature per cell : %d, max_feature per cell : %d", cells.size(), nc_min, nc_max);
     for(int i=0; i<cells.size(); i++) {
         std::packaged_task<int()> task( 
@@ -317,24 +314,14 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
         std::shared_future<int> rc_future = boost::asio::post(threadpool, std::move(task));
         cell_rc_set.push_back(rc_future);
     }
-
-    // for(int i=0; i<cells.size(); i++) {
-    //     adj_iters[i] += process_cell(cells[i], cell_keypoint_set[i], i, cell_origins[i], nc_min, nc_max);
-    //     holder.kps.insert(std::end(holder.kps), std::begin(cell_keypoint_set[i]), std::end(cell_keypoint_set[i]));
-    // }
     
     INFOLOG("Dispatched all cellular adafast extractor processes to thread pool, waiting for completion...");
     threadpool.join();
-    threadpool.wait();
     for(int i=0; i<cells.size(); i++) {
         adj_iters[i] += cell_rc_set[i].get();
         holder.kps.insert(std::end(holder.kps), std::begin(cell_keypoint_set[i]), std::end(cell_keypoint_set[i]));
     }
     INFOLOG("Completed synchronous extractor processes.");
-    end_timer(t_extractor);
-    log_timer(t_extractor, stderr);
-    //log_timer(t_extractor, fptr);
-    //fclose(fptr);
     int n_iters = 0;
     for(int i : adj_iters) {
         n_iters += i;

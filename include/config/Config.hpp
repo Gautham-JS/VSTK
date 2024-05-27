@@ -158,6 +158,7 @@ namespace vstk {
             int get_min_threshold_adafast();
             int get_max_threshold_adafast();
             int get_threshold_step_size_adafast();
+            int get_adafast_threadpool_size();
             std::pair<int, int> get_cell_size_adafast();
 
             // Configurations for RANSAC based F matrix compute

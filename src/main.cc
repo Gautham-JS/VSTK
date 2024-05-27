@@ -54,6 +54,7 @@ VstkConfig read_from_yaml(std::string yaml_file) {
     INFOLOG("\t --> min_threshold : %d", cfg.get_min_threshold_adafast());
     INFOLOG("\t --> max_threshold : %d", cfg.get_max_threshold_adafast());
     INFOLOG("\t --> cell_size : [%d X %d]", cfg.get_cell_size_adafast().first, cfg.get_cell_size_adafast().second);
+    INFOLOG("\t --> thread pool size : %d", cfg.get_adafast_threadpool_size());
 
     INFOLOG("Camera properties : ");
     INFOLOG("Left :");

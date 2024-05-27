@@ -81,6 +81,7 @@ namespace vstk {
 
     class AdaptiveFastExtractor {
         private:
+            VstkConfig conf;
             std::pair<int, int> cell_size;
             size_t n_min, n_max;
             size_t nc_min, nc_max;

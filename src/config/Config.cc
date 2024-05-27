@@ -134,7 +134,6 @@ int VstkConfig::load_adafast_properties(cv::FileNode node) {
         rc = this->set_cfg <int> (node["max_count"], this->max_count_adafast);
         rc = this->set_cfg <int> (node["min_threshold"], this->min_threshold_adafast);
         rc = this->set_cfg <int> (node["max_threshold"], this->max_threshold_adafast);
-        rc = this->set_cfg <int> (node["thread_pool_size"], this->adafast_thread_count);
 
         int x = cell_size_adafast.first, y = cell_size_adafast.second;
         rc = this->set_cfg <int> (node["cell_size_x"], x);
@@ -142,6 +141,7 @@ int VstkConfig::load_adafast_properties(cv::FileNode node) {
         this->cell_size_adafast = std::make_pair(x, y);
 
         rc = this->set_cfg(node["threshold_step_size"], this->threshold_step_size_adafast);
+        rc = this->set_cfg <int> (node["thread_pool_size"], this->adafast_thread_count);
         rc = 0;
     } 
     return rc;
@@ -213,6 +213,9 @@ std::shared_ptr<vstk::MonoCamParams> vstk::VstkConfig::get_mono_cam_params() {
     return std::move(this->mono_cam_params);
 }
 
+int vstk::VstkConfig::get_adafast_threadpool_size() {
+    return this->adafast_thread_count;
+}
 
 
 
