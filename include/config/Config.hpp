@@ -145,7 +145,7 @@ namespace vstk {
             }
 
             inline std::string get_stereo_src_2() {
-              return this->stereo_im1_source;
+              return this->stereo_im2_source;
             }
 
             

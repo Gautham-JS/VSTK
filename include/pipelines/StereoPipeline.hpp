@@ -12,6 +12,7 @@
 #include "features/FeatureExtractor.hpp"
 #include "features/FeatureMatcher.hpp"
 #include "config/Config.hpp"
+#include "core/Triangulation.hpp"
 
 namespace vstk {
   class StereoPipeline {

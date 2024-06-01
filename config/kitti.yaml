@@ -2,8 +2,8 @@
 ---
 
 
-directory_pattern_l: "/mnt/c/Data/Kitti/dataset/sequences/00/image_0/*.png"
-directory_pattern_r: "/mnt/c/Data/Kitti/dataset/sequences/00/image_1/*.png"
+directory_pattern_l: "/media/gjs/Windows-SSD/Data/Kitti/dataset/sequences/00/image_0/*.png"
+directory_pattern_r: "/media/gjs/Windows-SSD/Data/Kitti/dataset/sequences/00/image_1/*.png"
 
 sparse_detector:
   feature_extraction_algorithm: "ADAFAST"
@@ -13,12 +13,12 @@ sparse_detector:
 adafast:
   min_count: 200
   max_count: 1000
-  min_threshold : 10
-  max_threshold : 100
-  cell_size_x : 3
-  cell_size_y : 3
-  thread_pool_size : 9
-  threshold_step_size : 10
+  min_threshold : 5
+  max_threshold : 120
+  cell_size_x : 4
+  cell_size_y : 4
+  thread_pool_size : 4
+  threshold_step_size : 5
 
 cam_params:
    stereo_cam_params:
@@ -50,14 +50,9 @@ cam_params:
          rows: 3
          cols: 3
          dt: d
-         data: [ 4.2768023855839997e-04, -9.9996724849459995e-01,
-            -8.0844916834709995e-03, -7.2106265074969996e-03,
-            8.0811984716450003e-03, -9.9994131645039996e-01,
-            9.9997386459030002e-01, 4.8594858103900000e-04,
-            -7.2069336924220004e-03 ]
+         data: [ 1., 0., 0., 0., 1., 0., 0., 0., 1. ]
       ts: !!opencv-matrix
-         rows: 3
-         cols: 1
+         rows: 1
+         cols: 3
          dt: d
-         data: [ -1.1984599277130000e-02, -5.4039847297480001e-02,
-            -2.9219686486860003e-01 ]
+         data: [ 5.3716571886441788e-01, 0., 0. ]

@@ -19,6 +19,7 @@ void StereoPipeline::run() {
   Timer t_main = get_timer("Stereo Pipeline");
   FeatureExtractor extractor(this->conf);
   FeatureMatcher matcher(this->conf);
+  StereoTriangulate triangulator(this->conf);
   std::vector<ImageContextHolder> image_list;
 
   // Grab the image file names
@@ -29,10 +30,11 @@ void StereoPipeline::run() {
   // Grab the genesis pair
   ImageContextHolder iml(l_files[0]);
   ImageContextHolder imr(r_files[0]);
-  
+
   // TODO : Parallelize this
   extractor.run(iml);
   extractor.run(imr);
+  MatchesHolder stereo_matches = matcher.run(iml, imr);
   
   DBGLOG("Initial left image features : %d, Descriptors : %d", iml.get_features_holder().kps.size(), iml.get_features_holder().descriptors.size());
   DBGLOG("Initial right features : %d, Descriptors : %d", imr.get_features_holder().kps.size(), imr.get_features_holder().descriptors.size());
@@ -43,7 +45,8 @@ void StereoPipeline::run() {
   // TODO : Triangulation
   // Next we triangulate the genesis pair for
   // first reference 3D points and camera pose 
-  // for initializing the Mapping and Localization models.
+  // for initializing the Mapping and Localization models
+  triangulator.run_sparse(iml, imr, stereo_matches);
   
   // TODO : iteration currently limited to filesystem, once data loader 
   // design is final, need to incorporate it here and use it polymorphically. 

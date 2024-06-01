@@ -326,7 +326,6 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
     for(int i : adj_iters) {
         n_iters += i;
     }
-
     INFOLOG("Adaptive FAST extractor summary : Total points : %ld, Threshold Adjustments : %d for %ld (%dx%d) cells", 
         holder.kps.size(), 
         n_iters,
@@ -334,5 +333,32 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
         this->cell_size.first,
         this->cell_size.second
     );
+    display_threshold_image(im_ctx.get_image(), cells, cell_origins);
     return holder;
+}
+
+void AdaptiveFastExtractor::display_threshold_image(
+                cv::Mat image, 
+                std::vector<cv::Mat> cells, 
+                std::vector<std::pair<int, int>> origins
+) {
+    // canvas image to copy thresholds into for each cell.
+    cv::Mat thr(cv::Size(image.cols, image.rows), CV_8UC1);
+    cv::Mat cmap;
+    for(int i=0; i<cells.size(); i++) {
+        // cell wise threshold image initialized with threshold value for that cell.
+        int norm_threshold = vstk::normalize(this->thresholds[i], this->fth_min, this->fth_max);
+        cv::Mat cthr = cv::Mat(cv::Size(cells[i].cols, cells[i].rows), CV_64FC1, cv::Scalar(norm_threshold));
+        vstk::join_image_in_another(thr, cthr, origins[i]);
+    }
+    //thr.convertTo(thr, CV_8UC1, 1.0 / 255, 0);
+    cv::applyColorMap(thr, cmap, cv::COLORMAP_HOT);
+    cv::resize(cmap, cmap, {cmap.cols/2, cmap.rows/2});
+    cv::imshow("ADAFAST Cellular Thresholds", cmap);
+    int key = (cv::waitKey(1) & 0xFF);
+    if(key == 'q') {
+        INFOLOG("Caught 'q' keypress, exitting process.");
+        cv::destroyAllWindows();
+        exit(0);
+    }
 }

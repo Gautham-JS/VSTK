@@ -101,6 +101,11 @@ namespace vstk {
                 int min_feature_count, 
                 int max_feature_count
             );
+            void display_threshold_image(
+                cv::Mat image, 
+                std::vector<cv::Mat> cells, 
+                std::vector<std::pair<int, int>> origins
+            );
         public:
             explicit AdaptiveFastExtractor(VstkConfig config);
             FeaturesHolder extract(ImageContextHolder &image);

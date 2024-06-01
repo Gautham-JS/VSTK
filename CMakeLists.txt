@@ -177,12 +177,11 @@ add_library(
 )
 target_link_libraries(io_vstk  ${Boost_LIBRARIES})
 
-
 add_library(
-    pipelines_vstk SHARED
-    src/pipelines/StereoPipeline.cc
+    transforms_3d_vstk SHARED
+    src/core/Triangulation.cc
 )
-target_link_libraries(pipelines_vstk  ${Boost_LIBRARIES})
+target_link_libraries(transforms_3d_vstk config_vstk ${Boost_LIBRARIES} ${OpenCV_LIBS})
 
 add_library(
     utils_vstk SHARED
@@ -200,12 +199,17 @@ add_library(
 target_link_libraries(calib_kit_vstk  config_vstk ${Boost_LIBRARIES})
 
 
+add_library(
+    pipelines_vstk SHARED
+    src/pipelines/StereoPipeline.cc
+)
+target_link_libraries(pipelines_vstk config_vstk transforms_3d_vstk ${Boost_LIBRARIES})
 
 add_executable( vstk src/main.cc )
 
 target_link_libraries( vstk ${Boost_LIBRARIES})
 
-target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk)
+target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk)
 target_link_libraries( vstk ${OpenCV_LIBS})
 
 add_executable( calib_kit src/calib.cc )

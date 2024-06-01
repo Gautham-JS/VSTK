@@ -7,6 +7,7 @@
 
 #include "opencv2/core.hpp"
 #include "opencv2/opencv.hpp"
+#include "opencv2/calib3d.hpp"
 
 
 #include "config/Config.hpp"
@@ -21,10 +22,10 @@ namespace vstk {
   // 3D Points are in the camera frame,
   // needs transformation for world frame representation (TBD)
   typedef struct CamView {
-    std::vector<cv::Point3f> 3d_pts;
     cv::Mat Rc;
     cv::Mat tc;
     std::string view_id;
+    std::vector<cv::Point3f> pts3d;
   } CamView;
 
   class StereoTriangulate {
@@ -32,7 +33,7 @@ namespace vstk {
       VstkConfig conf;
     public:
       explicit StereoTriangulate(VstkConfig conf);
-      CamView run_sparse(ImageContextHolder l_im, ImageContextHolder r_im);
+      CamView run_sparse(ImageContextHolder l_im, ImageContextHolder r_im, MatchesHolder match_holder);
   };
 }
 
