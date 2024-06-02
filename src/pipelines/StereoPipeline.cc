@@ -36,7 +36,7 @@ void StereoPipeline::run() {
   extractor.run(imr);
   MatchesHolder stereo_matches = matcher.run(iml, imr);
   
-  DBGLOG("Initial left image features : %d, Descriptors : %d", iml.get_features_holder().kps.size(), iml.get_features_holder().descriptors.size());
+  DBGLOG("Initial left features : %d, Descriptors : %d", iml.get_features_holder().kps.size(), iml.get_features_holder().descriptors.size());
   DBGLOG("Initial right features : %d, Descriptors : %d", imr.get_features_holder().kps.size(), imr.get_features_holder().descriptors.size());
 
   image_list.reserve(l_files.size());
@@ -66,6 +66,7 @@ void StereoPipeline::run() {
     
     ImageContextHolder prev_im = image_list[prev_idx];
     ImageContextHolder curr_im(l_files[curr_idx]);
+    ImageContextHolder curr_im_r(r_files[curr_idx]);
     if(prev_im.get_image().empty()) {
       WARNLOG("Image %s has empty data!", prev_im.get_image_id());
       prev_im.load_image_path(prev_im.get_image_id());
@@ -76,8 +77,10 @@ void StereoPipeline::run() {
       curr_im.load_image_path(l_files[curr_idx]);
     }
     extractor.run(curr_im);
+    extractor.run(curr_im_r);
 
     MatchesHolder holder = matcher.run(curr_im, prev_im);
+    stereo_matches = matcher.run(curr_im, curr_im_r);
     DBGLOG("Sequential Matcher detected %ld matches with new candidate image.", holder.good_matches.size());
     if(holder.good_matches.size() == 0) {
       WARNLOG("No matches detected in current and reference image, tracking lost.");
@@ -86,6 +89,13 @@ void StereoPipeline::run() {
     }
     // Render the match display window, for debugging.
     matcher.display_match_overlap(curr_im, prev_im, holder);
+
+    if(stereo_matches.good_matches.size() > 40) {
+      triangulator.run_sparse(curr_im, curr_im_r, stereo_matches);
+    }
+    else {
+      WARNLOG("Too few matches to triangulate points, skipping trinagulation phase");
+    }
 
     if(holder.good_matches.size() > 40) {
       INFOLOG("Skipped current image, good quantity of matches.");

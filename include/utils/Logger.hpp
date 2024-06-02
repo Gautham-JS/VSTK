@@ -11,6 +11,8 @@
 #define INFOLOG(format, ...) {vstk::Logger::get().log_info(format, ##__VA_ARGS__);}
 #define ERRORLOG(format, ...) {vstk::Logger::get().log_error(format, ##__VA_ARGS__);}
 #define WARNLOG(format, ...) {vstk::Logger::get().log_warn(format, ##__VA_ARGS__);}
+#define IS_VSTK_DEBUG vstk::Logger::get().is_debug_enabled()
+
 namespace vstk {
     
     class Logger {
@@ -35,6 +37,10 @@ namespace vstk {
 
             void disable_debug() {
                 is_debug = false; 
+            }
+
+            bool is_debug_enabled() {
+                return this->is_debug;
             }
 
             template<typename... Arguments>

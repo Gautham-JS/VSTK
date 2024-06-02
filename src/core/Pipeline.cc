@@ -2,6 +2,8 @@
 #include "utils/TimerUtils.hpp"
 #include "core/Triangulation.hpp"
 
+
+
 using namespace vstk;
 
 const std::string working_dir = "/home/gjs/software/vstk/data/";
@@ -55,8 +57,18 @@ void StereoPipeline::start(VstkConfig conf) {
         INFOLOG("Loading image [ %d / %d ]", cur_ptr, left_files.size() - 1);
         ImageContextHolder prev_image = ref_image_list[prev_ptr];
         ImageContextHolder curr_image (left_files[cur_ptr]);
+        ImageContextHolder curr_image_r(right_files[cur_ptr]);
         extractor.run(curr_image);
+        extractor.run(curr_image_r);
         MatchesHolder match_holder = matcher.run(curr_image, prev_image);
+        stereo_matches = matcher.run(curr_image, curr_image_r);
+        if(stereo_matches.good_matches.size() > 40) {
+          triangulator.run_sparse(curr_image, curr_image_r, stereo_matches);
+        }
+        else {
+          WARNLOG("Too few feature matches to triangulate 3D points from");
+          WARNLOG("Triangulation phase skipped");
+        }
         DBGLOG("Detected %d features.", match_holder.good_matches.size());
 
         if(match_holder.good_matches.size() == 0) {

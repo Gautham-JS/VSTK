@@ -333,7 +333,9 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
         this->cell_size.first,
         this->cell_size.second
     );
-    display_threshold_image(im_ctx.get_image(), cells, cell_origins);
+    if(IS_VSTK_DEBUG) {
+        display_threshold_image(im_ctx.get_image(), cells, cell_origins);
+    }
     return holder;
 }
 
