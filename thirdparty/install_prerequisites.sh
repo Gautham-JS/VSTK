@@ -26,6 +26,11 @@ function grpc_deps() {
 	run_cmd "sudo apt-get install -y librdkafka-dev"
 }
 
+function opengl_deps() {
+	run_cmd "sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev"
+}
+
 
 opencv_deps
 grpc_deps
+opengl_deps

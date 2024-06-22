@@ -3,7 +3,14 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 
-project( vstk-core )
+project( vstk )
+
+
+# if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#   add_compile_options(-Wall -Wextra -Wpedantic)
+# endif()
+
+
 
 set(ABSL_ENABLE_INSTALL ON)
 set(gRPC_RE2_PROVIDER "module")
@@ -61,6 +68,26 @@ if(TRANSPORT_GRPC)
 
   add_compile_definitions(VSTK_TRANSPORT_PROTO_GRPC)
 endif()
+
+if(USE_ROS)
+  find_package(ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
+  find_package(std_msgs REQUIRED)
+  find_package(sensor_msgs REQUIRED)
+  find_package(cv_bridge REQUIRED)
+  find_package(image_transport REQUIRED)
+  add_compile_definitions(VSTK_USE_ROS)
+  
+  if(BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    set(ament_cmake_copyright_FOUND TRUE)
+    set(ament_cmake_cpplint_FOUND TRUE)
+    ament_lint_auto_find_test_dependencies()
+  endif()
+endif()
+
+
+  
 
 # Proto file
 get_filename_component(svc_proto "${CMAKE_SOURCE_DIR}/protobuf/image_svc.proto" ABSOLUTE)
@@ -129,6 +156,11 @@ if(TRANSPORT_GRPC)
   endif()
 endif()
 
+#if(USE_ROS)
+#  check_lib("ROS C++", "rclcpp_LIBRARIES")
+#  check_lib("ROS STD Messages", "std_msgs_LIBRARIES")
+#endif()
+
 message("\n== SYSTEM LIBRARY CHECK COMPLETE\n")
 
 if(TRANSPORT_GRPC)
@@ -156,6 +188,7 @@ if(TRANSPORT_GRPC)
   )
   target_link_libraries( image_svc_vstk  grpc++ grpc++_unsecure libprotobuf ${Boost_LIBRARIES})
 endif()
+
 
 add_library(
     features_vstk SHARED
@@ -220,3 +253,18 @@ if(TRANSPORT_GRPC)
   target_link_libraries( vstk svc_grpc_proto image_svc_vstk )
   target_link_libraries( vstk grpc++ grpc++_unsecure libprotobuf )
 endif()
+
+if(USE_ROS) 
+  add_library(
+    ros_io SHARED 
+    src/io/ros/RosPublisher.cc
+  )
+  ament_target_dependencies(ros_io rclcpp std_msgs std_msgs sensor_msgs cv_bridge image_transport)
+  target_link_libraries(ros_io ${Boost_LIBRARIES} io_vstk features_vstk utils_vstk config_vstk pipelines_vstk transforms_3d_vstk)
+
+  add_executable( stereo_publisher src/stereo_publisher.cc )
+  target_link_libraries( stereo_publisher ${Boost_LIBRARIES} ${OpenCV_LIBS})
+  target_link_libraries( stereo_publisher features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk ros_io)
+  ament_target_dependencies(stereo_publisher rclcpp std_msgs sensor_msgs cv_bridge image_transport)
+endif()
+

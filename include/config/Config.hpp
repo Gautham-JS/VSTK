@@ -70,6 +70,30 @@ namespace vstk {
             int n_rows, n_cols;
     };
 
+
+    // struct for storing camera view state
+    typedef struct CamView {
+        cv::Mat Rc;
+        cv::Mat tc;
+        std::string view_id;
+        std::vector<cv::Point3f> pts3d;
+    } CamView;
+
+    // enum for renderer, stores state of perspective transformation frame
+    enum TransformState {
+        WORLD       = 1,
+        CAMERA      = 2
+    };
+
+    // high level struct wrapping all states for renderer thread
+    typedef struct RenderState {
+        std::string widnow_name = "VSTK";
+        int transform_state = TransformState::CAMERA;
+        int pt_size = 2;
+    } RenderState;
+
+
+
     int read_stereo_params(std::string filepath, StereoCamParams &params);
 
 

@@ -20,12 +20,6 @@ namespace vstk {
   // generated using the traingulation process,
   // 3D Points are in the camera frame,
   // needs transformation for world frame representation (TBD)
-  typedef struct CamView {
-    cv::Mat Rc;
-    cv::Mat tc;
-    std::string view_id;
-    std::vector<cv::Point3f> pts3d;
-  } CamView;
 
   class StereoTriangulate {
     private:
