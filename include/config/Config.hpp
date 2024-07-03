@@ -2,8 +2,13 @@
 #include <string>
 #include <utility>
 
+#include <stdlib.h>
+#include <getopt.h>
+
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
+
+#include "utils/Logger.hpp"
 
 #ifndef __VSTK_CONFIG_H_
 #define __VSTK_CONFIG_H_
@@ -70,6 +75,15 @@ namespace vstk {
             int n_rows, n_cols;
     };
 
+    typedef struct RosConfig {
+        std::string left_image_topic = "/vstk/cam0/image_raw";
+        std::string right_image_topic = "/vstk/cam1/image_raw";
+        std::string left_cam_info_topic = "/vstk/cam0/info";
+        std::string right_cam_info_topic = "/vstk/cam1/info";
+        std::string p3d_topic = "/vstk/core/p3d";
+        std::string p2d_topic = "/vstk/core/p2d";
+    } RosConfig;
+
 
     // struct for storing camera view state
     typedef struct CamView {
@@ -92,6 +106,8 @@ namespace vstk {
         int pt_size = 2;
     } RenderState;
 
+    typedef std::shared_ptr<vstk::StereoCamParams> StereoCamParamsPtr;
+    typedef std::shared_ptr<MonoCamParams> MonoCamParamsPtr;
 
 
     int read_stereo_params(std::string filepath, StereoCamParams &params);
@@ -109,8 +125,10 @@ namespace vstk {
             DComputeAlgorithm descriptor_compute_algo = DComputeAlgorithm::ORB;
             MatchAlgorithm match_algo = MatchAlgorithm::BF;
 
-            std::shared_ptr<StereoCamParams> stereo_cam_params = nullptr;
-            std::shared_ptr<MonoCamParams> mono_cam_params = nullptr;
+            StereoCamParamsPtr stereo_cam_params = nullptr;
+            MonoCamParamsPtr mono_cam_params = nullptr;
+
+            RosConfig ros_config;
 
             std::string run_data_source, stereo_im1_source, stereo_im2_source;
             std::string working_dir;
@@ -164,15 +182,18 @@ namespace vstk {
             std::string get_working_dir();
             std::string get_run_data_src();
             int get_num_features_retained();
-            inline std::string get_stereo_src_1() {
+            
+            std::string get_stereo_src_1() {
               return this->stereo_im1_source;
             }
 
-            inline std::string get_stereo_src_2() {
+            std::string get_stereo_src_2() {
               return this->stereo_im2_source;
             }
 
-            
+            RosConfig get_ros_config() {
+                return this->ros_config;
+            }
 
             bool is_config_file_used();
             
@@ -199,10 +220,12 @@ namespace vstk {
             std::shared_ptr<MonoCamParams> get_mono_cam_params();
     };
 
+    void describe_config(VstkConfig conf);
+    
+    VstkConfig build_config_from_args(int argc, char**argv);
+
     std::string enum_to_str(FExtractionAlgorithm algo);
-
     std::string enum_to_str(DComputeAlgorithm algo);
-
     std::string enum_to_str(MatchAlgorithm algo);
 
     FExtractionAlgorithm extractor_algo_str_to_enum(std::string f_algorithm);

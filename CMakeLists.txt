@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_CXX_STANDARD 17)
 
 project( vstk )
 
@@ -25,7 +26,6 @@ set (BUILD_SHARED_LIBS ON)
 
 message("${CMAKE_SOURCE_DIR}/thirdparty/grpc/grpc/")
 
-# 
 
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/")
@@ -256,15 +256,26 @@ endif()
 
 if(USE_ROS) 
   add_library(
-    ros_io SHARED 
+    ros_pub SHARED 
     src/io/ros/RosPublisher.cc
   )
+  add_library(
+    ros_io SHARED 
+    src/io/ros/RosPipeline.cc
+  )
+  ament_target_dependencies(ros_pub rclcpp std_msgs std_msgs sensor_msgs cv_bridge image_transport)
   ament_target_dependencies(ros_io rclcpp std_msgs std_msgs sensor_msgs cv_bridge image_transport)
+  target_link_libraries(ros_pub ${Boost_LIBRARIES} io_vstk features_vstk utils_vstk config_vstk pipelines_vstk transforms_3d_vstk)
   target_link_libraries(ros_io ${Boost_LIBRARIES} io_vstk features_vstk utils_vstk config_vstk pipelines_vstk transforms_3d_vstk)
 
   add_executable( stereo_publisher src/stereo_publisher.cc )
   target_link_libraries( stereo_publisher ${Boost_LIBRARIES} ${OpenCV_LIBS})
-  target_link_libraries( stereo_publisher features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk ros_io)
+  target_link_libraries( stereo_publisher features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk ros_pub)
   ament_target_dependencies(stereo_publisher rclcpp std_msgs sensor_msgs cv_bridge image_transport)
+
+  add_executable( vstk_core src/stereo_core.cc )
+  target_link_libraries( vstk_core ${Boost_LIBRARIES} ${OpenCV_LIBS})
+  target_link_libraries( vstk_core features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk ros_io)
+  ament_target_dependencies(vstk_core rclcpp std_msgs sensor_msgs cv_bridge image_transport)
 endif()
 

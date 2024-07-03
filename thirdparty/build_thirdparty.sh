@@ -121,9 +121,9 @@ function install_grpc {
     eval "pushd grpc"
   else
     echo "Creating directory for building gRPC"
-    eval "mkdir grpc && pushd grpc"
-    eval "git clone --recurse-submodules -b v$GRPC_VER --depth 1 --shallow-submodules https://github.com/grpc/grpc"
-    assert_rc $? "Failed to clone gRPC"
+    #eval "mkdir grpc && pushd grpc"
+    #eval "git clone --recurse-submodules -b v$GRPC_VER --depth 1 --shallow-submodules https://github.com/grpc/grpc"
+    #assert_rc $? "Failed to clone gRPC"
   fi
 
   # if check_dir "$TP_BUILD_ROOT/grpc/build"; then
@@ -148,7 +148,7 @@ function install_grpc {
   # make install
   # assert_rc $? "Failed to install gRPC locally"
 
-  popd
+  #popd
 }
 
 function install_boost {

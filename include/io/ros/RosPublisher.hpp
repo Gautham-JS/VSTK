@@ -19,8 +19,6 @@
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 
-#include "message_filters/sync_policies/exact_time.h"
-
 #include "std_msgs/msg/header.hpp"
 #include "cv_bridge/cv_bridge.h"
 
@@ -28,6 +26,7 @@
 #include "features/FeatureExtractor.hpp"
 #include "utils/Logger.hpp"
 #include "utils/CvUtils.hpp"
+#include "io/ros/RosDefs.hpp"
 
 namespace vstk {
   
@@ -37,17 +36,14 @@ namespace vstk {
   * should lock the mutex and check for update in the queue and subsequently publish anything on the queue.
   */
 
-    template<typename T>
-    using MQueue = std::queue<T>;
-
     class RosImageDirPublisher : public rclcpp::Node {
         private:
             uint8_t frame_rate;
             rclcpp::TimerBase::SharedPtr timer_;
-            rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr l_publisher;
-            rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr r_publisher;
-            rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr l_info_publisher;
-            rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr r_info_publisher;
+            rclcpp::Publisher<RosImageMsg>::SharedPtr l_publisher;
+            rclcpp::Publisher<RosImageMsg>::SharedPtr r_publisher;
+            rclcpp::Publisher<RosCameraInfoMsg>::SharedPtr l_info_publisher;
+            rclcpp::Publisher<RosCameraInfoMsg>::SharedPtr r_info_publisher;
 
             VstkConfig config;
             DiskIO io;
@@ -78,35 +74,6 @@ namespace vstk {
             void broadcast();
         public:
             explicit RosImageDirPublisher(VstkConfig config);
-            void initialize();
-    };
-
-    class VstkCore : public rclcpp::Node {
-        private:
-            uint8_t frame_rate;
-            std::string pcl_topic;
-
-            std::mutex mtx;
-
-
-            // rclcpp::TimerBase::SharedPtr timer_;
-            // rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pcl_publisher;
-            
-            // rclcpp::Subscription<sensor_msgs::msg::Image> l_img_subscriber;
-            // rclcpp::Subscription<sensor_msgs::msg::CameraInfo> l_info_subscriber;
-            // rclcpp::Subscription<sensor_msgs::msg::Image> r_img_subscriber;
-            // rclcpp::Subscription<sensor_msgs::msg::CameraInfo> r_info_subscriber;
-
-
-
-        
-            VstkConfig conf;            
-
-            // async function that acts as the callback fn, reads from message queue and publishes anything new.
-            void timer_callback();
-
-        public:
-            explicit VstkCore(VstkConfig conf);
             void initialize();
     };
 

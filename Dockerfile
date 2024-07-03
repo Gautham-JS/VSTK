@@ -19,8 +19,8 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir -p /vstk/
 COPY ./src/ /vstk/src/
 COPY ./include/ /vstk/include/
-COPY ./thirdparty/ /vstk/thirdparty/
 COPY ./CMakeLists.txt /vstk/CMakeLists.txt
+COPY ./package.xml /vstk/package.xml
 COPY ./build.sh /vstk/build.sh
  
 # Build the base Colcon workspace, installing dependencies first.
@@ -28,5 +28,6 @@ WORKDIR /vstk
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash
 
 RUN sudo apt-get update -y && sudo apt install software-properties-common -y
-RUN /bin/bash /vstk/build.sh
-
+RUN sudo apt-get install libopencv-dev
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash && mkdir ./build && cd build && cmake -DUSE_ROS=ON .. && cmake --build .
+ENTRYPOINT ["tail", "-f", "/dev/null"]

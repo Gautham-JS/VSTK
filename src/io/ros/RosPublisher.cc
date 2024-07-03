@@ -77,14 +77,4 @@ void RosImageDirPublisher::broadcast() {
 }
 
 
-VstkCore::VstkCore(VstkConfig conf) : Node("vstk_core") , conf(conf) {
-  // this->pcl_publisher = this->create_publisher<sensor_msgs::msg::PointCloud2>(conf.get_ros_config().p3d_topic, 10);
-  // this->image_subscriber = this->create_subscription<sensor_msgs::msg::Image>(conf.get_ros_config().left_image_topic);
-}
-
-void VstkCore::initialize() {
-  this->conf = conf;
-}
-
-
 

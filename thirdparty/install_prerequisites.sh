@@ -11,7 +11,7 @@ function run_cmd() {
 }
 
 function opencv_deps() {
-	run_cmd "sudo add-apt-repository -y 'deb http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse'"
+  run_cmd "sudo add-apt-repository -y 'deb http://archive.ubuntu.com/ubuntu/ jammy-updates main restricted universe multiverse'"
 	run_cmd "sudo add-apt-repository -y 'deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse'"
 	run_cmd "sudo apt-get install -y build-essential"
 	run_cmd "sudo apt-get install -y cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev"
@@ -31,6 +31,7 @@ function opengl_deps() {
 }
 
 
+run_cmd "sudo apt-get install wget unzip"
 opencv_deps
-grpc_deps
+#grpc_deps
 opengl_deps
