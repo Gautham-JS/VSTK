@@ -58,6 +58,15 @@ namespace vstk {
         ERROR_PROP_UNDEF = 4,
     };
 
+    enum PERSISTENCE_MODES {
+        IN_PROCESS_MEMORY = 1,
+        REMOTE_IF = 2,
+    };
+
+    enum PERSISTENCE_REMOTE_PROVIDER {
+        REDIS = 1,
+    };
+
     class MonoCamParams {
         public:
             cv::Mat K, dist_coeff;
@@ -92,6 +101,15 @@ namespace vstk {
         std::string view_id;
         std::vector<cv::Point3f> pts3d;
     } CamView;
+
+    // enum for configuring data persistence layer
+    typedef struct PersistenceConfig {
+        vstk::PERSISTENCE_MODES mode = vstk::PERSISTENCE_MODES::IN_PROCESS_MEMORY;
+        std::string rt_id = "";
+
+        vstk::PERSISTENCE_REMOTE_PROVIDER provider = vstk::PERSISTENCE_REMOTE_PROVIDER::REDIS;
+        std::string interface_url = "";
+    } PersistenceConfig;
 
     // enum for renderer, stores state of perspective transformation frame
     enum TransformState {

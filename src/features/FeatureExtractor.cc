@@ -1,6 +1,7 @@
 #include "features/FeatureExtractor.hpp"
 #include "utils/Logger.hpp"
 #include "utils/CvUtils.hpp"
+#include "utils/GenericUtils.hpp"
 
 #include <functional>
 #include <random>
@@ -8,41 +9,9 @@
 
 using namespace vstk;
 
-static std::random_device               rd;
-static std::mt19937                     gen(rd());
-static std::uniform_int_distribution<>  dis(0, 15);
-static std::uniform_int_distribution<>  dis2(8, 11);
-
-std::string generate_uuid_v4() {
-    std::stringstream ss;
-    int i;
-    ss << std::hex;
-    for (i = 0; i < 8; i++) {
-        ss << dis(gen);
-    }
-    ss << "-";
-    for (i = 0; i < 4; i++) {
-        ss << dis(gen);
-    }
-    ss << "-4";
-    for (i = 0; i < 3; i++) {
-        ss << dis(gen);
-    }
-    ss << "-";
-    ss << dis2(gen);
-    for (i = 0; i < 3; i++) {
-        ss << dis(gen);
-    }
-    ss << "-";
-    for (i = 0; i < 12; i++) {
-        ss << dis(gen);
-    };
-    return ss.str();
-}
-
 ImageContextHolder::ImageContextHolder(cv::Mat image) {
   this->image_data = image;
-  this->image_id = generate_uuid_v4();
+  this->image_id = generate_uuid();
   this->image_width = image.rows;
   this->image_length = image.cols;
 }
@@ -58,7 +27,7 @@ ImageContextHolder::ImageContextHolder(unsigned char *image_data, uint32_t image
 void ImageContextHolder::load_image_data(unsigned char *image_data, uint32_t image_length, uint32_t image_width) {
     this->image_width = image_width;
     this->image_length = image_length;
-    this->image_id = generate_uuid_v4();
+    this->image_id = generate_uuid();
     this->image_data = cv::Mat(image_width, image_length, CV_8UC1, image_data);
 }
 

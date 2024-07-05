@@ -1,4 +1,6 @@
 #include "pipelines/StereoPipeline.hpp"
+#include "io/Persistence.hpp"
+#include "utils/GenericUtils.hpp"
 
 using namespace vstk;
 
@@ -9,11 +11,13 @@ StereoPipeline::StereoPipeline(VstkConfig conf) :
 
 void StereoPipeline::run() {
   INFOLOG("Starting Stereo Pipeline");
+  const std::string rt_id = vstk::generate_random_string();
   DBGLOG(
-        "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n=========================================================\n", 
+        "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n\nRuntime ID : %s\n=========================================================\n", 
         vstk::enum_to_str(conf.get_feature_extraction_algo()), 
         vstk::enum_to_str(conf.get_descriptor_compute_algo()),
-        vstk::enum_to_str(conf.get_match_algorithm())
+        vstk::enum_to_str(conf.get_match_algorithm()),
+        rt_id
   );
   
   Timer t_main = get_timer("Stereo Pipeline");
@@ -21,6 +25,12 @@ void StereoPipeline::run() {
   FeatureMatcher matcher(this->conf);
   StereoTriangulate triangulator(this->conf);
   std::vector<ImageContextHolder> image_list;
+  
+  PersistenceConfig pconf;
+  ProcMemoryPersistence memory_store(pconf);
+  memory_store.initialize();
+
+
 
   // Grab the image file names
   vstk::DiskIO io;
@@ -48,6 +58,8 @@ void StereoPipeline::run() {
   // for initializing the Mapping and Localization models
   triangulator.run_sparse(iml, imr, stereo_matches);
   
+  memory_store.set_reference_stereo_frame(rt_id, {iml, imr});
+  
   // TODO : iteration currently limited to filesystem, once data loader 
   // design is final, need to incorporate it here and use it polymorphically. 
   size_t curr_idx = 1;
@@ -62,11 +74,11 @@ void StereoPipeline::run() {
     }
     start_timer(t_main);
     INFOLOG("Loading image [ %ld / %ld ]", curr_idx, l_files.size());
-    DBGLOG("PrevIdx : %ld, CurrentIdx : %ld", prev_idx, curr_idx);
     
-    ImageContextHolder prev_im = image_list[prev_idx];
+    ImageContextHolder prev_im = memory_store.get_reference_stereo_frame(rt_id)->first;
     ImageContextHolder curr_im(l_files[curr_idx]);
     ImageContextHolder curr_im_r(r_files[curr_idx]);
+    DBGLOG("PrevId : %s, CurrentId : %s", prev_im.get_image_id(), curr_im.get_image_id());
     if(prev_im.get_image().empty()) {
       WARNLOG("Image %s has empty data!", prev_im.get_image_id());
       prev_im.load_image_path(prev_im.get_image_id());
@@ -104,8 +116,7 @@ void StereoPipeline::run() {
     else {
       // matches below 40 but not zero, good point to sample new reference image
       INFOLOG("Inserting image %s as new reference image", curr_im.get_image_id());
-      image_list[prev_idx].clear_image_data();
-      image_list.push_back(curr_im);
+      memory_store.set_reference_stereo_frame(rt_id, {curr_im, curr_im_r});
       prev_idx++;
     }
     end_timer(t_main);

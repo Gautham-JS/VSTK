@@ -1,21 +1,34 @@
 #include <stdio.h>
 #include <string>
 
+
 #ifndef __X3DS_IO_INTERFACE
 #define __X3DS_IO_INTERFACE
 
-namespace x3ds {
+#include "features/FeatureExtractor.hpp"
+#include "config/Config.hpp"
+#include "io/Persistence.hpp"
+
+namespace vstk {
+
     class IOInterface {
+        protected:
+            vstk::PersistenceConfig config;
 
         public:
-            explicit IOInterface(std::string base_directory);
-            virtual void write(std::string filename, std::string data);
-            virtual void write_chunk(std::string filename, std::string data, uint32_t chunk_number);
+            explicit IOInterface(vstk::PersistenceConfig persistence_config) : config(persistence_config) {
+            }
+            
+            // initialize the data stores
+            virtual int initialize();
 
-            virtual std::string read(std::string filename);
-            virtual std::string read_chunk(std::string filename, uint32_t chunk_number);
+            // returns the next reference frame
+            virtual ImageContextHolder get_next_frame();
+            virtual StereoImageContextPair get_next_stereo_frame();
 
-            virtual void join_chunks(std::string filename);
+            // returns the previous reference frame from the appropriate data store. 
+            ImageContextHolder get_reference_frame();
+            StereoImageContextPair get_reference_stereo_frame();
     };
 }
 

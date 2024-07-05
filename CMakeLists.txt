@@ -211,6 +211,12 @@ add_library(
 target_link_libraries(io_vstk  ${Boost_LIBRARIES})
 
 add_library(
+    persistence_vstk SHARED
+    src/io/Persistence.cc
+)
+target_link_libraries(persistence_vstk  ${Boost_LIBRARIES})
+
+add_library(
     transforms_3d_vstk SHARED
     src/core/Triangulation.cc
 )
@@ -221,8 +227,10 @@ add_library(
     src/utils/ObjectLifecycle.cc
     src/utils/TimerUtils.cc
     src/utils/CvUtils.cc
+    src/utils/GenericUtils.cc
+    src/utils/DataUtils.cc
 )
-target_link_libraries(utils_vstk  ${Boost_LIBRARIES})
+target_link_libraries(utils_vstk  ${Boost_LIBRARIES} ${OpenCV_LIBS})
 
 add_library(
     calib_kit_vstk SHARED
@@ -236,18 +244,18 @@ add_library(
     pipelines_vstk SHARED
     src/pipelines/StereoPipeline.cc
 )
-target_link_libraries(pipelines_vstk config_vstk transforms_3d_vstk ${Boost_LIBRARIES})
+target_link_libraries(pipelines_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
 
 add_executable( vstk src/main.cc )
 
 target_link_libraries( vstk ${Boost_LIBRARIES})
 
-target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk)
+target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk persistence_vstk)
 target_link_libraries( vstk ${OpenCV_LIBS})
 
 add_executable( calib_kit src/calib.cc )
 target_link_libraries( calib_kit ${Boost_LIBRARIES} ${OpenCV_LIBS})
-target_link_libraries( calib_kit calib_kit_vstk)
+target_link_libraries( calib_kit calib_kit_vstk persistence_vstk)
 
 if(TRANSPORT_GRPC)
   target_link_libraries( vstk svc_grpc_proto image_svc_vstk )
@@ -270,12 +278,12 @@ if(USE_ROS)
 
   add_executable( stereo_publisher src/stereo_publisher.cc )
   target_link_libraries( stereo_publisher ${Boost_LIBRARIES} ${OpenCV_LIBS})
-  target_link_libraries( stereo_publisher features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk ros_pub)
+  target_link_libraries( stereo_publisher features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk persistence_vstk ros_pub)
   ament_target_dependencies(stereo_publisher rclcpp std_msgs sensor_msgs cv_bridge image_transport)
 
   add_executable( vstk_core src/stereo_core.cc )
   target_link_libraries( vstk_core ${Boost_LIBRARIES} ${OpenCV_LIBS})
-  target_link_libraries( vstk_core features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk ros_io)
+  target_link_libraries( vstk_core features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk persistence_vstk ros_io)
   ament_target_dependencies(vstk_core rclcpp std_msgs sensor_msgs cv_bridge image_transport)
 endif()
 
