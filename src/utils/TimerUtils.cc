@@ -23,8 +23,12 @@ void vstk::log_timer(vstk::Timer timer, FILE* fptr) {
     fprintf(fptr, "\n======================================\nMarker : %s\nCompute Time : %ld ms\n======================================\n", timer.marker.c_str(), timer.elapsed_ms);
 }
 
+double vstk::get_fps(vstk::Timer timer) {
+    return (1000 / ((double) timer.elapsed_ms));
+}
+
 void vstk::log_fps(vstk::Timer timer, FILE* fptr) {
-    double fps = (1000 / ((double) timer.elapsed_ms));
+    double fps = get_fps(timer);
     fprintf(fptr, "\n======================================\nMarker : %s\nCompute Time : %ld ms\nFPS : %f\n======================================\n", 
         timer.marker.c_str(), 
         timer.elapsed_ms,

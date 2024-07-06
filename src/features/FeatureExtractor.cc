@@ -184,15 +184,30 @@ AdaptiveFastExtractor::AdaptiveFastExtractor(VstkConfig config) :
     conf(config)
 {
     size_t cell_length = this->cell_size.first * this->cell_size.second;
-    this->thresholds = std::vector<int>(cell_length, 20);
-    this->detectors = std::vector<cv::Ptr<cv::Feature2D>>(
-        cell_length,
-        cv::FastFeatureDetector::create(20) 
-    );
+    this->thresholds = std::vector<int>(cell_length, this->starting_threshold);
+
+    int i = this->starting_threshold;
+    int j = this->starting_threshold;
+    // load detectors for all possible threshold states to memory on initialization to save load times in runtime phase.
+    while(i <= fth_max || j >= fth_min) {
+        if(i <= fth_max) {
+            this->detector_lut.insert( {i, cv::FastFeatureDetector::create(i)} );
+            i += th_step;
+        }
+        if(j >= fth_min) {
+            this->detector_lut.insert( {j, cv::FastFeatureDetector::create(j)} );
+            j -= th_step;
+        }
+    }
 }
 
 void AdaptiveFastExtractor::extract_internal(cv::Mat image, std::vector<cv::KeyPoint> &kps, int cell_idx, std::pair<int, int> origin) {
-    this->detectors[cell_idx]->detect(
+    auto it = this->detector_lut.find(this->thresholds[cell_idx]);
+    if(it == this->detector_lut.end()) {
+        ERRORLOG("Cannot find detector for threshold %d", this->thresholds[cell_idx]);
+    }
+
+    it->second->detect(
         image, 
         kps
     );
@@ -207,7 +222,6 @@ void AdaptiveFastExtractor::down_step_threshold(int cell_idx) {
     if(thresholds[cell_idx] < fth_min) {
         thresholds[cell_idx] = fth_min;
     }
-    detectors[cell_idx] = cv::FastFeatureDetector::create(thresholds[cell_idx]);
 }
 
 void AdaptiveFastExtractor::up_step_threshold(int cell_idx) {
@@ -215,7 +229,6 @@ void AdaptiveFastExtractor::up_step_threshold(int cell_idx) {
     if(thresholds[cell_idx] > fth_max) {
         thresholds[cell_idx] = fth_max;
     }
-    detectors[cell_idx] = cv::FastFeatureDetector::create(thresholds[cell_idx]);
 }
 
 int AdaptiveFastExtractor::process_cell(

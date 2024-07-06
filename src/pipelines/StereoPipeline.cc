@@ -1,6 +1,7 @@
 #include "pipelines/StereoPipeline.hpp"
 #include "io/Persistence.hpp"
 #include "utils/GenericUtils.hpp"
+#include "utils/DataUtils.hpp"
 
 using namespace vstk;
 
@@ -25,6 +26,7 @@ void StereoPipeline::run() {
   FeatureMatcher matcher(this->conf);
   StereoTriangulate triangulator(this->conf);
   std::vector<ImageContextHolder> image_list;
+  std::vector<FPSDataPt_t> fps_data;
   
   PersistenceConfig pconf;
   ProcMemoryPersistence memory_store(pconf);
@@ -121,6 +123,16 @@ void StereoPipeline::run() {
     }
     end_timer(t_main);
     log_fps(t_main, stdout);
+    fps_data.push_back(
+      vstk::create_fps_data_pt(
+        iml.get_image_id(), vstk::get_fps(t_main)
+      )
+    );
+
+    // dump frame time data to json file every 50 frames to avoid disk IO bottleneck for every frame.
+    if(curr_idx % 50) {
+      vstk::dump_data_pts_to_file("framerate_vstk.json", fps_data);
+    }
     curr_idx++;
   }
 }

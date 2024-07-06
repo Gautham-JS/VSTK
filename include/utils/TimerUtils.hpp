@@ -30,6 +30,7 @@ namespace vstk {
 
     void log_timer(vstk::Timer timer, FILE *fptr);
     void log_fps(vstk::Timer timer, FILE* fptr); 
+    double get_fps(vstk::Timer timer);
 }
 
 #endif
