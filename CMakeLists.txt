@@ -16,6 +16,8 @@ project( vstk )
 set(ABSL_ENABLE_INSTALL ON)
 set(gRPC_RE2_PROVIDER "module")
 
+set(CMAKE_BUILD_TYPE "Debug")
+
 set (WITH_OPENGL ON)
 set (WITH_OPENCL ON)
 set (WITH_PROTOBUF OFF)
@@ -207,6 +209,7 @@ add_library(
     io_vstk SHARED
     src/io/DiskIO.cc
     src/io/Serializer.cc
+    src/io/IOInterface.cc
 )
 target_link_libraries(io_vstk  ${Boost_LIBRARIES})
 

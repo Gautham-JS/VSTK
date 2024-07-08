@@ -365,12 +365,20 @@ void vstk::VstkConfig::set_mono_cam_params(std::shared_ptr<MonoCamParams> mono_p
     this->mono_cam_params = std::move(mono_params);
 }
 
+void vstk::VstkConfig::set_persistence_config(std::shared_ptr<PersistenceConfig> persistence_config) {
+    this->persistence_config = std::move(persistence_config);
+}
+
 StereoCamParamsPtr vstk::VstkConfig::get_stereo_cam_params() {
     return this->stereo_cam_params;
 }
 
 MonoCamParamsPtr vstk::VstkConfig::get_mono_cam_params() {
-    return std::move(this->mono_cam_params);
+    return this->mono_cam_params;
+}
+
+PersistenceConfigPtr vstk::VstkConfig::get_persistence_config() {
+    return this->persistence_config;
 }
 
 int vstk::VstkConfig::get_adafast_threadpool_size() {

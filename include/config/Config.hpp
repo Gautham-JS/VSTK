@@ -126,6 +126,7 @@ namespace vstk {
 
     typedef std::shared_ptr<vstk::StereoCamParams> StereoCamParamsPtr;
     typedef std::shared_ptr<MonoCamParams> MonoCamParamsPtr;
+    typedef std::shared_ptr<PersistenceConfig> PersistenceConfigPtr;
 
 
     int read_stereo_params(std::string filepath, StereoCamParams &params);
@@ -145,6 +146,7 @@ namespace vstk {
 
             StereoCamParamsPtr stereo_cam_params = nullptr;
             MonoCamParamsPtr mono_cam_params = nullptr;
+            PersistenceConfigPtr persistence_config = nullptr;
 
             RosConfig ros_config;
 
@@ -194,6 +196,7 @@ namespace vstk {
             void set_slam_type(SLAMType type);
             void set_stereo_cam_params(std::shared_ptr<StereoCamParams> stereo_params);
             void set_mono_cam_params(std::shared_ptr<MonoCamParams> mono_params);
+            void set_persistence_config(std::shared_ptr<PersistenceConfig> persistence_config);
 
             RunType get_run_type();
             LoadScheme get_load_scheme();
@@ -236,6 +239,7 @@ namespace vstk {
 
             std::shared_ptr<StereoCamParams> get_stereo_cam_params();
             std::shared_ptr<MonoCamParams> get_mono_cam_params();
+            std::shared_ptr<PersistenceConfig> get_persistence_config();
     };
 
     void describe_config(VstkConfig conf);

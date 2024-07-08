@@ -31,9 +31,6 @@ CamView StereoTriangulate::run_sparse(ImageContextHolder l_im, ImageContextHolde
     r_kps.push_back(cv::Point2f(r_x, r_y));
   }
 
-
-
-  DBGLOG("Undistorting points...");
   // TODO : Parallelize this
   cv::undistortPoints(
     l_kps,
@@ -47,10 +44,9 @@ CamView StereoTriangulate::run_sparse(ImageContextHolder l_im, ImageContextHolde
     conf.get_stereo_cam_params()->cam2_params.K, 
     conf.get_stereo_cam_params()->cam2_params.dist_coeff
   );
-  DBGLOG("Undistortion complete")
-  DBGLOG("Constructing Projection matrix...");
-  // TODO : parallelize this
 
+
+  // TODO : parallelize this
   for(int r=0; r<Rs.rows; r++) {
     for(int c=0; c<Rs.cols; c++) {
       DBGLOG("Setting L_P (%d, %d) as  %f", r, c, Rs.at<float>(r, c));
@@ -67,30 +63,14 @@ CamView StereoTriangulate::run_sparse(ImageContextHolder l_im, ImageContextHolde
   r_P.at<double>(1, 3) = ts.at<double>(0, 1);
   r_P.at<double>(2, 3) = ts.at<double>(0, 2);
 
-  //std::cerr << "P_L : " << std::endl << l_P << std::endl;
-  //std::cerr << "P_R : " << std::endl << r_P << std::endl;
-
-  //std::cerr << "R : " << std::endl << Rs << std::endl;
-  //std::cerr << "t : " << std::endl << ts << std::endl;
-
 
   l_P = conf.get_stereo_cam_params()->cam1_params.K * l_P;
   r_P = conf.get_stereo_cam_params()->cam2_params.K * r_P;
   
-  // l_P.convertTo(l_P, CV_64F);
-  // r_P.convertTo(r_P, CV_64F);
-
-  //std::cerr << "K_L * P_L : " << std::endl << l_P << std::endl;
-  //std::cerr << "K_R * P_R : " << std::endl << r_P << std::endl;
-
-
-  DBGLOG("Projection matrix constructed successfully");
-  DBGLOG("Starting triangulation process for 4D point coordinates...");
   cv::Mat lpts(l_kps);
   cv::Mat rpts(r_kps);
   cv::triangulatePoints(l_P, r_P, l_kps, r_kps, triang_pts_4D);  
   DBGLOG("Triangulation complete, estimated %ld 4D points in space", triang_pts_4D.cols);
-  DBGLOG("Normalizing 4D space into 3D space in camera coordinate system...");
   
   camera_view.pts3d.reserve(triang_pts_4D.cols);
   for(size_t i=0; i<triang_pts_4D.cols; i++){
@@ -98,11 +78,9 @@ CamView StereoTriangulate::run_sparse(ImageContextHolder l_im, ImageContextHolde
     localpt.x = triang_pts_4D.at<float>(0,i) / triang_pts_4D.at<float>(3,i);
     localpt.y = triang_pts_4D.at<float>(1,i) / triang_pts_4D.at<float>(3,i);
     localpt.z = triang_pts_4D.at<float>(2,i) / triang_pts_4D.at<float>(3,i);
-    //std::cerr << localpt << std::endl;
     camera_view.pts3d.emplace_back(localpt);
   }
-  //std::cerr<< triang_pts_4D.t() << std::endl;
-  vstk::write_ply(camera_view.pts3d, "./scene.ply");
+  //vstk::write_ply(camera_view.pts3d, "./scene.ply");
   camera_view.Rc = Rs;
   camera_view.tc = ts;
   vstk::draw_depth(l_im.get_image(), l_kps, camera_view.pts3d);

@@ -303,7 +303,7 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
         adj_iters[i] += cell_rc_set[i].get();
         holder.kps.insert(std::end(holder.kps), std::begin(cell_keypoint_set[i]), std::end(cell_keypoint_set[i]));
     }
-    INFOLOG("Completed synchronous extractor processes.");
+    INFOLOG("Completed asynchronous extractor processes.");
     int n_iters = 0;
     for(int i : adj_iters) {
         n_iters += i;
