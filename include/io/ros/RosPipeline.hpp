@@ -6,6 +6,8 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
+#include <queue>
 
 #include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
@@ -24,18 +26,26 @@
 #include "io/ros/RosDefs.hpp"
 
 
-typedef sensor_msgs::msg::Image         RosImageMsg;
-typedef sensor_msgs::msg::CameraInfo    RosCameraInfoMsg;
-typedef sensor_msgs::msg::PointCloud2   RosPCL2Msg;
-
 namespace vstk {
+    typedef sensor_msgs::msg::Image         RosImageMsg;
+    typedef sensor_msgs::msg::CameraInfo    RosCameraInfoMsg;
+    typedef sensor_msgs::msg::PointCloud2   RosPCL2Msg;
+
+    typedef struct StereoRosMsgGroup_t {
+        RosImageMsg left_image;
+        RosCameraInfoMsg left_cam_info;
+        RosImageMsg right_image;
+        RosCameraInfoMsg right_cam_info;
+    } StereoRosMsgGroup_t;
+
+    typedef std::queue<StereoRosMsgGroup_t> RosStereoMsgQueue;
+
     class VstkCore : public rclcpp::Node {
         private:
             uint8_t frame_rate;
             std::string pcl_topic;
-
-            std::mutex mtx;
-
+            
+            std::shared_mutex mtx;
 
             rclcpp::TimerBase::SharedPtr timer_;
             rclcpp::Publisher<RosPCL2Msg>::SharedPtr pcl_publisher;
@@ -56,8 +66,7 @@ namespace vstk {
 
             std::shared_mutex mutex;
             RosImageMsg ref_image;
-            RosCameraInfoMsg ref_info;
-        
+            RosCameraInfoMsg ref_info;  
             VstkConfig conf;            
 
             // async function that acts as the callback fn.

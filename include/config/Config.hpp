@@ -50,6 +50,19 @@ namespace vstk {
         BRIEF
     };
 
+   enum class IO_ERROR_STATES:int {
+        GENERIC_ERROR = -1,
+        OK = 0,
+        CFG_READ_ERR = 1,
+        CFG_VALIDATION_ERR = 2,
+        INVALID_STATE_ERR = 500,
+    };
+
+    template <typename Enumeration>
+    auto enum_as_integer(Enumeration const value) -> typename std::underlying_type<Enumeration>::type {
+        return static_cast<typename std::underlying_type<Enumeration>::type>(value);
+    }
+
     enum CFG_LOAD_RETURN_CODES {
         OK = 0,
         ERROR_GENERIC = 1,
@@ -184,6 +197,7 @@ namespace vstk {
             int load_adafast_properties(cv::FileNode node);
             int load_detector_properties(cv::FileNode node);
             int load_camera_properties(cv::FileNode node);
+            int load_persistence_properties(cv::FileNode node);
 
             void set_working_dir(std::string working_dir);
             void set_run_data_src(std::string run_data_dir);

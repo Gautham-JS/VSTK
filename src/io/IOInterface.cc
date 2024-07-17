@@ -4,14 +4,7 @@
 
 using namespace vstk;
 
-enum IO_ERROR_STATES {
-    GENERIC_ERROR = -1,
 
-    OK = 0,
-    CFG_READ_ERR = 1,
-    CFG_VALIDATION_ERR = 2,
-    INVALID_STATE_ERR = 500,
-};
 
 int FileIO::init_stereo() {
     DBGLOG("Initializing File IO in STEREO mode");
@@ -20,11 +13,11 @@ int FileIO::init_stereo() {
 
     if(left_src.empty() || left_src.size() == 0) {
         ERRORLOG("Stereo-Left images directory config could not be read");
-        return CFG_READ_ERR;
+        return enum_as_integer(IO_ERROR_STATES::CFG_READ_ERR);
     }
     if(right_src.empty() || right_src.size() == 0) {
         ERRORLOG("Stereo-Right images directory config could not be read");
-        return CFG_READ_ERR;
+        return enum_as_integer(IO_ERROR_STATES::CFG_READ_ERR);
     }
     
     this->files_left = io.list_directory(this->config.get_stereo_src_1());
@@ -32,12 +25,12 @@ int FileIO::init_stereo() {
 
     if(this->files_left.size() == 0 || this->files_right.size() == 0) {
         ERRORLOG("File IO Error, Directory list failed. Stereo left or right directory sets empty!");
-        return CFG_VALIDATION_ERR;
+        return enum_as_integer(IO_ERROR_STATES::CFG_VALIDATION_ERR);
     }
 
     this->fs_ilimit = std::min(this->files_left.size(), this->files_right.size());
 
-    return OK;
+    return enum_as_integer(IO_ERROR_STATES::OK);
 }
 
 int FileIO::initialize() {

@@ -7,14 +7,16 @@
 
 #include "utils/Logger.hpp"
 
+
 namespace vstk {
+    
+    // struct to track the framerate and other frame metrics.
     typedef struct FPSDataPt_t {
         std::string frame_id = "";
         int idx = 0;
         double fps = 0;
         bool is_insertion = false;
     } FPSDataPt_t;
-
 
     FPSDataPt_t create_fps_data_pt(std::string frame_id, double fps, bool is_insertion);
     

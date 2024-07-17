@@ -17,12 +17,12 @@ namespace vstk {
     typedef std::shared_lock<std::shared_mutex> ThreadSharedLock;
     typedef std::atomic<StereoCtxStore> AtomicStereoCtxStore;
 
-    class PersistentDataStore {
+    class IPersistentDataStore {
         protected:
             PersistenceConfig config;
         
         public:
-            explicit PersistentDataStore(PersistenceConfig config) : config(config) {}
+            explicit IPersistentDataStore(PersistenceConfig config) : config(config) {}
 
             virtual void initialize() = 0;
 
@@ -32,13 +32,14 @@ namespace vstk {
             virtual void set_reference_stereo_frame(std::string rt_id, StereoImageContextPair stereo_pair) = 0;
     };
 
-    class ProcMemoryPersistence : public PersistentDataStore {
+    class ProcMemoryPersistence : public IPersistentDataStore {
         private:
             inline static StereoCtxStore stereo_ctx_store;
             inline static std::shared_mutex static_class_mtx;
         public:
-            explicit ProcMemoryPersistence(PersistenceConfig config) : PersistentDataStore(config) {}
-
+            explicit ProcMemoryPersistence(PersistenceConfig config) : IPersistentDataStore(config) {}
+            explicit ProcMemoryPersistence(VstkConfig vstk_conf) : IPersistentDataStore(*vstk_conf.get_persistence_config().get()) {}
+            
             void initialize() override;
 
             std::shared_ptr<StereoImageContextPair> get_reference_stereo_frame(std::string rt_id) override;
@@ -48,7 +49,7 @@ namespace vstk {
 
     class PersistenceFactory {
         public:
-            PersistentDataStore create(PersistenceConfig config);
+            IPersistentDataStore create(PersistenceConfig config);
     };
 
 }

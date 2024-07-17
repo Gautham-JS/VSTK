@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string>
-
+#include <queue>
 
 #ifndef __VSTK_IO_INTERFACE_H_
 #define __VSTK_IO_INTERFACE_H_
@@ -24,6 +24,7 @@ namespace vstk {
      *  -> Setup persistence layer for reference frames and other non volatile data.
      *  -> Write data types to data stores (Pointclouds, 2D point sets, frame positions etc for re-use).
      */
+
     class IOInterface {
         protected:
             vstk::VstkConfig config;
@@ -41,7 +42,7 @@ namespace vstk {
             virtual bool is_io_active() = 0;
     };
 
-    class FileIO : public IOInterface {
+    class FileIO final : public IOInterface {
         private:
             size_t fs_iptr = 0;                     // Filesystem read-iteration pointer                  
             size_t fs_ilimit = 0;                   // Filesystem iteration limit (min number of files in l/r stores)
@@ -57,10 +58,15 @@ namespace vstk {
         public:
             explicit FileIO(VstkConfig conf) : IOInterface(conf) {}
             int initialize() override;
-            
+
             bool is_io_active() override;
             StereoImageContextPair get_next_stereo_frame() override;
             ImageContextHolder get_next_frame() override;
+    };
+
+    class RosIO final : public IOInterface {
+        private:
+
     };
 
 }

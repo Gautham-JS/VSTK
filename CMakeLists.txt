@@ -245,9 +245,9 @@ target_link_libraries(calib_kit_vstk  config_vstk ${Boost_LIBRARIES})
 
 add_library(
     pipelines_vstk SHARED
-    src/pipelines/StereoPipeline.cc
+    src/core/Pipeline.cc
 )
-target_link_libraries(pipelines_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
+target_link_libraries(pipelines_vstk io_vstk features_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
 
 add_executable( vstk src/main.cc )
 

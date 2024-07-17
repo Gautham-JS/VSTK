@@ -283,7 +283,29 @@ int VstkConfig::load_from_yaml(std::string filename) {
     rc = load_adafast_properties(fs["adafast"]);
     rc = load_detector_properties(fs["sparse_detector"]);
     rc = load_camera_properties(fs["cam_params"]);
+    rc = load_persistence_properties(fs["persistence"]);
     return rc;
+}
+
+int VstkConfig::load_persistence_properties(cv::FileNode node) {
+    int rc = ERROR_GENERIC;
+    if(!node.empty()) {
+        std::string type;
+        rc = this->set_cfg <std::string> (node["type"], type);
+        if(rc == 0) {
+            for (auto & ch: type) ch = toupper(ch);
+            if(type == "IN_MEMORY") {
+                PersistenceConfig p_cfg;
+                p_cfg.mode = vstk::PERSISTENCE_MODES::IN_PROCESS_MEMORY;
+                this->set_persistence_config(std::make_shared<vstk::PersistenceConfig>(p_cfg));
+            }
+            else (ERRORLOG("Unrecognized persistence type"));
+        }
+        else (ERRORLOG("Failed to read persistence type from config file"));
+    }
+    else (ERRORLOG("Persistence config is empty in config file"));
+    return rc;
+
 }
 
 int VstkConfig::load_adafast_properties(cv::FileNode node) {

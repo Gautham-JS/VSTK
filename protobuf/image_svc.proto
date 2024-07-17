@@ -1,25 +1,101 @@
 syntax = "proto3";
 
-message ManageExchangeRequest {
-	// state of the exchage. 
-	// values : start/interrupt/complete
-	string state = 1;
-	// Specifies scheme to execute IO calls.
-	// values : disk (default) / in-memory
-	optional string io_scheme = 2;
-	// Process images in-stream on the fly (in-stream, default) or wait for upload 
-	// stage and then move to processsing stage (staged).
-	optional string processing_scheme = 3;
-	// Only to use with interrupt/complete states.
-	// Specifies the ID returned on start call to interrupt/complete 
-	optional string exchange_id = 4;
-	// provides additional info regd start and end of stream. For tracking progress
-	// stream automatically stops when end number is hit 
-	optional uint32 start_image_number = 5;
-	optional uint32 end_image_number = 6;
+enum rt_state {
+  START = 0;
+  END = 1;
+  INTERRUPT = 3;
 }
 
-message ManageExchangeResponse {
+enum slam_mode {
+  MONO = 0;
+  STEREO = 1;
+  RGBD = 3;
+}
+
+
+message GetAllRTSMessage {
+  optional string rt_id_filter = 1;
+}
+
+message AllRTSResponse {
+  repeated string rt_id = 1;
+}
+
+message GetRTStatusMessage {
+  string rt_id = 1;
+  optional bool extended = 2;
+}
+
+message RTStatusResponse {
+  string rt_id = 1;
+  string state = 2;
+  string ft_extraction_algo = 3;
+  string ft_compute_algo = 4;
+  string ft_matching_algo = 5;
+
+  bool is_extended = 6;
+  optional string data_source = 7;
+  optional uint32 frames_processed = 8;
+  optional uint32 average_fps = 9;
+}
+
+message AdafastPropertiesMsg {
+  uint32 min_count = 1;
+  uint32 max_count = 2;
+  uint32 min_threshold = 3;
+  uint32 max_threshold = 4;
+  uint32 cell_size_x = 5;
+  uint32 cell_size_y = 6;
+  uint32 thread_pool_size = 7;
+  uint32 threshold_step_size = 8;
+}
+
+message FeaturesConfig {
+  string detector_algorithm = 1;
+  string compute_algorithm = 2;
+  string matcher_algorithm = 3;
+  optional AdafastPropertiesMsg adafast_properties = 4; 
+}
+
+message CameraParmsMsg {
+  repeated double k_matrix = 3 [packed=true];
+  repeated double d_vector = 4 [packed=true];
+}
+
+message StereoCameraParamsMsg {
+  CameraParmsMsg left_cam = 1;
+  CameraParmsMsg right_cam = 2;
+
+  repeated double r_matrix = 7 [packed=true];
+  repeated double t_vector = 8 [packed=true];
+  repeated double e_matrix = 9 [packed=true];
+  repeated double f_matrix = 10 [packed=true];
+}
+
+message CreateStereoRTRequest {
+  string data_src_left_stereo = 1;
+  string data_src_right_stereo = 2;
+
+  StereoCameraParamsMsg camera_params = 3;
+  
+  FeaturesConfig feature_detector_config = 4;
+
+  optional string rt_id = 5;
+  optional bool override_state = 6;
+  optional bool is_cfg_file_used = 7;
+
+  oneof data {
+    bytes cfg_data = 8;
+  };
+}
+
+message ManageRTRequest {
+  string rt_id = 1;
+  rt_state state = 2;
+  optional string additional_info = 3;
+}
+
+message CommonRTResponse {
 	string state = 1;
 	string exchange_id = 2;
 	
@@ -77,7 +153,12 @@ message GetImageResponse {
 
 
 
-service X3DSService {
-  rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse) {};
-  rpc ManageExchange(ManageExchangeRequest) returns (ManageExchangeResponse) {};
+service VstkService {
+  // rpc UploadImage(stream UploadImageRequest) returns (UploadImageResponse) {};
+  // rpc ManageExchange(ManageExchangeRequest) returns (ManageExchangeResponse) {};
+
+  rpc CreateStereoRuntime(CreateStereoRTRequest) returns (CommonRTResponse) {};
+  rpc ManageRuntime(ManageRTRequest) returns (CommonRTResponse) {};
+  rpc GetAllRTs(GetAllRTSMessage) returns (AllRTSResponse) {};
+  rpc GetRTStatus(GetRTStatusMessage) returns (RTStatusResponse) {};
 }
