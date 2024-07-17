@@ -231,6 +231,7 @@ add_library(
     src/utils/TimerUtils.cc
     src/utils/CvUtils.cc
     src/utils/GenericUtils.cc
+    src/utils/AsyncUtils.cc
     src/utils/DataUtils.cc
 )
 target_link_libraries(utils_vstk  ${Boost_LIBRARIES} ${OpenCV_LIBS})
@@ -242,18 +243,24 @@ add_library(
 )
 target_link_libraries(calib_kit_vstk  config_vstk ${Boost_LIBRARIES})
 
-
 add_library(
     pipelines_vstk SHARED
     src/core/Pipeline.cc
 )
 target_link_libraries(pipelines_vstk io_vstk features_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
 
+add_library(
+    runtimes_vstk SHARED
+    src/core/Runtime.cc
+)
+target_link_libraries(runtimes_vstk pipelines_vstk io_vstk features_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
+
+
 add_executable( vstk src/main.cc )
 
 target_link_libraries( vstk ${Boost_LIBRARIES})
 
-target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk transforms_3d_vstk persistence_vstk)
+target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk runtimes_vstk transforms_3d_vstk persistence_vstk)
 target_link_libraries( vstk ${OpenCV_LIBS})
 
 add_executable( calib_kit src/calib.cc )

@@ -1,26 +1,20 @@
 #ifndef __VSTK_CORE_RT_H_
 #define __VSTK_CORE_RT_H_
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp>
-
-#include <unordered_map>
-
 #include <thread>
 #include <atomic>
 #include <shared_mutex>
+#include <future>
 
+#include <unordered_map>
 
-#include "features/FeatureExtractor.hpp"
-#include "features/FeatureMatcher.hpp"
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+
+#include "core/Pipeline.hpp"
 #include "config/Config.hpp"
-
 #include "utils/Logger.hpp"
-#include "utils/CvUtils.hpp"
 #include "utils/GenericUtils.hpp"
-#include "io/DiskIO.hpp"
-#include "io/IOInterface.hpp"
-#include "io/Persistence.hpp"
 
 namespace vstk {
 
@@ -55,12 +49,28 @@ namespace vstk {
      *              * RedisPersistence -> Implements a client for redis as a data store, higher latency due to network calls         
      */           
 
+    enum RT_STATE {
+        RT_RUNNING,
+        RT_COMPLETE,
+        RT_ERROR,
+        RT_UNINIT,
+    };
 
+    typedef struct RuntimeDescriptor_t {
+        std::string rt_id;
+        std::future<void> pipeline_proc;
+        RT_STATE state = RT_UNINIT;
+    } RuntimeDescriptor_t;
+
+    
 
     class IRuntime {
         protected:
             vstk::VstkConfig conf;
-            std::string rt_id;
+            RuntimeDescriptor_t rt_descriptor;
+            std::shared_mutex mtx;
+            std::atomic_bool interrupt_flag;
+            std::shared_ptr<IPipeline> pipeline_ptr;
 
         public:
             explicit IRuntime(VstkConfig conf) : 
@@ -68,14 +78,13 @@ namespace vstk {
             {} 
             
             virtual void describe() = 0;
-            virtual void start() = 0;
-            
-            std::string get_id() {
-                if(this->rt_id.empty()) {
-                    this->rt_id = generate_random_string(16);
-                }
-                return this->rt_id;
-            }
+            virtual std::string start() = 0;
+            virtual int stop() = 0;
+
+
+            RT_STATE get_runtime_state();
+            std::string get_id();
+
 
         private:
             inline IPersistentDataStore* build_persistence_layer(VstkConfig conf) {
@@ -87,25 +96,35 @@ namespace vstk {
             }
     };
 
+    typedef std::shared_ptr<IRuntime> RuntimePtr_t;
+
     class StereoRuntime final : public IRuntime {
         public:
             explicit StereoRuntime(VstkConfig conf) : IRuntime(conf) {}
-            void start() override;
+            
+            std::string start() override;
+            int stop() override;
+            void describe() override;
     };
 
-
-    typedef std::shared_ptr<IRuntime> RuntimePtr_t;
+    class RuntimeFactory {
+        public:
+            RuntimePtr_t build_rt(VstkConfig conf);
+    };
 
     class RuntimeManager {
         private:
-            static std::unordered_map<std::string, RuntimePtr_t> runtimes;
-            static std::shared_mutex mtx;
+            inline static std::unordered_map<std::string, RuntimePtr_t> runtimes;
+            inline static std::shared_mutex mtx;
+            
         public: 
-            std::string start_runtime(VstkConfig config, RuntimePtr_t &rt);
+            std::string start_runtime(RuntimePtr_t &rt);
+            std::string start_runtime(VstkConfig config);
             RuntimePtr_t get_runtime(std::string rt_id);
             bool is_running(std::string rt_id);
             int stop_runtime(std::string rt_id);
     };
+
 }
 
 #endif

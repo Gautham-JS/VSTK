@@ -2,6 +2,7 @@
 #include "utils/Logger.hpp"
 #include "utils/CvUtils.hpp"
 #include "utils/GenericUtils.hpp"
+#include "utils/AsyncUtils.hpp"
 
 #include <functional>
 #include <random>
@@ -170,7 +171,7 @@ void FeatureExtractor::display_features(ImageContextHolder image_ctx) {
         cv::Scalar(0, 255, 0), 
         cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS
     );
-    cv::imshow("keypoints", kp_im);
+    vstk::imshow("Keypoints", kp_im);
     cv::waitKey();
 }
 
@@ -338,7 +339,7 @@ void AdaptiveFastExtractor::display_threshold_image(
     //thr.convertTo(thr, CV_8UC1, 1.0 / 255, 0);
     cv::applyColorMap(thr, cmap, cv::COLORMAP_HOT);
     cv::resize(cmap, cmap, {cmap.cols/2, cmap.rows/2});
-    cv::imshow("ADAFAST Cellular Thresholds", cmap);
+    vstk::imshow("ADAFAST Cellular threasholds", cmap);
     int key = (cv::waitKey(1) & 0xFF);
     if(key == 'q') {
         INFOLOG("Caught 'q' keypress, exitting process.");

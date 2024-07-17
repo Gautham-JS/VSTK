@@ -9,6 +9,10 @@ using namespace vstk;
 
 const std::string working_dir = "/home/gjs/software/vstk/data/";
 
+void IPipeline::set_interrupt_flag(bool interrupt_flag) {
+    this->interrupt_flag.store(interrupt_flag);
+}
+
 StereoPipeline::StereoPipeline(vstk::VstkConfig conf) : 
     IPipeline(conf) 
 {}
@@ -26,6 +30,7 @@ void StereoPipeline::initialize() {
     if (this->io_layer->initialize() != vstk::enum_as_integer(IO_ERROR_STATES::OK)) {
         throw std::runtime_error("Failed to initialize IO layer");
     }
+    this->set_async_ctx();
     // TODO : Add return code for this initialization as its a critical operation
     // for the runtime
     this->persistence_layer->initialize();
@@ -79,7 +84,7 @@ void StereoPipeline::start() {
     // TODO : iteration currently limited to filesystem, once data loader
     // design is final, need to incorporate it here and use it polymorphically.
     int curr_idx = 0;
-    while (this->io_layer->is_io_active()) {
+    while (this->io_layer->is_io_active() && !this->interrupt_flag) {
         start_timer(t_main);
 
         stereo_pair = this->io_layer->get_next_stereo_frame();

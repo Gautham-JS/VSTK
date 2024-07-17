@@ -10,6 +10,9 @@
 #include <opencv2/calib3d.hpp>
 
 namespace vstk {
+
+    void imshow(std::string msg, cv::Mat image);
+
     std::vector<cv::Mat> split_image( cv::Mat & image, int M, int N );
     std::vector<cv::Mat> split_image( cv::Mat & image, int M, int N , std::vector<std::pair<int, int>> &origins);
     void join_image_in_another(cv::Mat &parent, cv::Mat child, std::pair<int, int> child_origin_in_parent);

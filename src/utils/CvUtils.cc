@@ -1,5 +1,8 @@
 #include "utils/CvUtils.hpp"
 #include "utils/Logger.hpp"
+#include "utils/AsyncUtils.hpp"
+#include "utils/GenericUtils.hpp"
+
 
 #include <fstream>
 
@@ -125,7 +128,7 @@ void vstk::draw_depth(cv::Mat image, std::vector<cv::Point2f> p2d, std::vector<c
         cv::drawMarker(depth_im, p2d[i], color, cv::MARKER_CROSS, 20, 2);
     }
     cv::resize(depth_im, depth_im, {depth_im.cols/2, depth_im.rows/2});
-    cv::imshow("Depth", depth_im);
+    vstk::imshow("Depth", depth_im);
     int key = (cv::waitKey(1) & 0xFF);
     if(key == 'q') {
         cv::destroyAllWindows();
@@ -153,5 +156,17 @@ void vstk::clip_pcl(std::vector<cv::Point3f> pts, std::vector<cv::Point3f> &out_
             continue;
         }
         out_pts.push_back(pts[i]);
+    }
+}
+
+
+void vstk::imshow(std::string msg, cv::Mat image) {
+    std::string fmsg = msg;
+    if(vstk::is_async()) {
+        fmsg = vstk::fmt_str("%s [%s]", msg.c_str(), vstk::get_rt_id().c_str());
+    }
+    INFOLOG("Format header for image %s : %s", msg, fmsg);
+    if(!vstk::is_headless()) {
+        cv::imshow(fmsg, image);
     }
 }
