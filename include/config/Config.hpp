@@ -25,9 +25,9 @@ namespace vstk {
     };
 
     enum SLAMType {
-        STEREO,
-        MONO,
-        RGBD
+        STEREO = 1,
+        MONO = 2,
+        RGBD = 3
     };
 
     enum class MatchAlgorithm {
@@ -185,8 +185,6 @@ namespace vstk {
                 }
                 return rc;
             }
-
-
         public:
             explicit VstkConfig(RunType run_type, std::string working_dir);
             VstkConfig(RunType run_type, std::string working_dir, LoadScheme loading_scheme);
@@ -228,6 +226,14 @@ namespace vstk {
 
             RosConfig get_ros_config() {
                 return this->ros_config;
+            }
+
+            void set_stereo_src_1(const std::string src) {
+                this->stereo_im1_source = src;
+            }
+
+            void set_stereo_src_2(const std::string src) {
+                this->stereo_im2_source = src;
             }
 
             bool is_config_file_used();

@@ -3,7 +3,13 @@
 
 using namespace vstk;
 
+
+static std::unordered_map<std::string, RuntimePtr_t> runtimes;
+static std::shared_mutex mtx;
+
 using unique_smutex_lock_t = std::unique_lock<std::shared_mutex>;
+
+
 
 void start_pipeline_callback(std::shared_ptr<IPipeline> pipeline) {
     pipeline->initialize();
@@ -21,16 +27,16 @@ std::string RuntimeManager::start_runtime(VstkConfig conf) {
 
 std::string RuntimeManager::start_runtime(RuntimePtr_t &rt) {
     INFOLOG("Starting async runtime %s", rt->get_id());
+    unique_smutex_lock_t(mtx);
     std::string rt_id = rt->start();
-    unique_smutex_lock_t(RuntimeManager::mtx);
-    RuntimeManager::runtimes.insert({rt_id, rt});
+    runtimes.insert({rt_id, rt});
     return rt_id;
 }
 
 RuntimePtr_t RuntimeManager::get_runtime(std::string rt_id) {
-    unique_smutex_lock_t(RuntimeManager::mtx);
-    auto it = RuntimeManager::runtimes.find(rt_id);
-    if(it == RuntimeManager::runtimes.end()) {
+    unique_smutex_lock_t(mtx);
+    auto it = runtimes.find(rt_id);
+    if(it == runtimes.end()) {
         ERRORLOG("No runtime found in memory with ID %s", rt_id);
         return nullptr;
     }
@@ -38,9 +44,9 @@ RuntimePtr_t RuntimeManager::get_runtime(std::string rt_id) {
 }
 
 bool RuntimeManager::is_running(std::string rt_id) {
-    unique_smutex_lock_t(RuntimeManager::mtx);
-    auto it = RuntimeManager::runtimes.find(rt_id);
-    if(it == RuntimeManager::runtimes.end()) {
+    unique_smutex_lock_t(mtx);
+    auto it = runtimes.find(rt_id);
+    if(it == runtimes.end()) {
         WARNLOG("No runtime found in memory with ID %s", rt_id);
         return false;
     }
@@ -48,14 +54,14 @@ bool RuntimeManager::is_running(std::string rt_id) {
 }
 
 int RuntimeManager::stop_runtime(std::string rt_id) {
-    unique_smutex_lock_t(RuntimeManager::mtx);
-    auto it = RuntimeManager::runtimes.find(rt_id);
-    if(it == RuntimeManager::runtimes.end()) {
+    unique_smutex_lock_t(mtx);
+    auto it = runtimes.find(rt_id);
+    if(it == runtimes.end()) {
         WARNLOG("No runtime found in memory with ID %s", rt_id);
         return EXIT_FAILURE;
     }
     int rc = it->second->stop();
-    RuntimeManager::runtimes.erase(rt_id);
+    runtimes.erase(rt_id);
     return rc;
 }
 
@@ -118,7 +124,6 @@ int StereoRuntime::stop() {
     this->rt_descriptor.pipeline_proc.get();
     vstk::end_timer(t);
     INFOLOG("Runtime thread successfully stopped in %ld ms", t.elapsed_ms);
-    
     return 0;
 }
 
@@ -136,7 +141,6 @@ RuntimePtr_t RuntimeFactory::build_rt(VstkConfig conf) {
             WARNLOG("Monocular SLAM Pipeline is unimplemented");
             throw std::bad_function_call();
             break;
-        
         case SLAMType::RGBD :
             WARNLOG("RGBD SLAM Pipeline is unimplemented");
             throw std::bad_function_call();
@@ -144,10 +148,26 @@ RuntimePtr_t RuntimeFactory::build_rt(VstkConfig conf) {
         default:
             WARNLOG("Runtime Builder logic for this SLAM type is unimplmented");
             throw std::bad_function_call();
+            exit(EXIT_FAILURE);
             break;
     }
     return rt_ptr;
 }
 
+
+std::vector<std::string> RuntimeManager::get_all_running_rts() {
+    INFOLOG("Getting all running runtime IDs");
+    unique_smutex_lock_t(mtx);
+    std::vector<std::string> rts;
+    rts.reserve(runtimes.size());
+    auto it = runtimes.begin();
+    while(it != runtimes.end()) {
+        if(it->first.empty()) continue;
+
+        rts.push_back(it->first);
+        it++;
+    }
+    return rts;
+}
 
 

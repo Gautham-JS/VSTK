@@ -14,6 +14,28 @@ VstkConfig read_from_yaml(std::string yaml_file) {
     return cfg;
 }
 
+std::string type2str(int type) {
+    std::string r;
+
+    uchar depth = type & CV_MAT_DEPTH_MASK;
+    uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+    switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+    }
+
+    r += "C";
+    r += (chans+'0');
+
+    return r;
+}
 
 void vstk::describe_config(VstkConfig conf) {
     std::stringstream ss;
@@ -46,11 +68,11 @@ void vstk::describe_config(VstkConfig conf) {
     DBGLOG("xx [End left Camera] xx");
 
     DBGLOG("-- [Start Right Camera] --");
-    ss << conf.get_stereo_cam_params()->cam2_params.K << std::endl;
+    ss << conf.get_stereo_cam_params()->cam2_params.K << std::endl << "Type : " << type2str(conf.get_stereo_cam_params()->cam2_params.K.type()) << std::endl;
     DBGLOG("\t --> K : \n%s", ss.str());
     ss.clear();
     
-    ss << conf.get_stereo_cam_params()->cam2_params.dist_coeff << std::endl;
+    ss << conf.get_stereo_cam_params()->cam2_params.dist_coeff << std::endl << "Type : " << type2str(conf.get_stereo_cam_params()->cam2_params.K.type()) << std::endl;
     DBGLOG("\t --> Distortion Coeffecients : \n%s", ss.str());
     ss.clear();
     DBGLOG("xx [End Right Camera] xx");
@@ -238,7 +260,7 @@ int vstk::VstkConfig::get_num_features_retained() {
 }
 
 void vstk::VstkConfig::set_slam_type(vstk::SLAMType type) {
-    this->slam_type = slam_type;
+    this->slam_type = type;
 }
 
 SLAMType VstkConfig::get_slam_type() {
@@ -273,12 +295,14 @@ std::pair<int, int> VstkConfig::get_cell_size_adafast() {
 
 int VstkConfig::load_from_yaml(std::string filename) {
     int rc = 1;
+    cv::FileStorage fsref;
     cv::FileStorage fs(filename, cv::FileStorage::READ);
     cv::FileNode node;
 
     set_cfg<std::string>(fs["directory_pattern_l"], this->stereo_im1_source);
     set_cfg<std::string>(fs["directory_pattern_r"], this->stereo_im2_source);
     
+    this->slam_type = SLAMType::STEREO;
 
     rc = load_adafast_properties(fs["adafast"]);
     rc = load_detector_properties(fs["sparse_detector"]);

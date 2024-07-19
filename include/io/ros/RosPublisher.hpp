@@ -1,6 +1,8 @@
 #ifndef __VSTK_ROS_PUBLISHER_H
 #define __VSTK_ROS_PUBLISHER_H
 
+#ifdef VSTK_IO_ROS_ENABLED
+
 #include <stdio.h>
 #include <string>
 #include <memory>
@@ -80,4 +82,5 @@ namespace vstk {
 
 }
 
+#endif
 #endif

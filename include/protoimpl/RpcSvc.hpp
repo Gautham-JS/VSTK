@@ -1,12 +1,22 @@
+#ifndef __IMG_SVC_PROTO_IMPL_H
+#define __IMG_SVC_PROTO_IMPL_H
+
+#ifdef VSTK_IO_GRPC
+
 #include <stdio.h>
 
+#include "config/Config.hpp"
 #include "utils/Logger.hpp"
+#include "utils/AsyncUtils.hpp"
+#include "utils/GenericUtils.hpp"
+#include "core/Runtime.hpp"
+
 
 #include "image_svc.grpc.pb.h"
 #include "image_svc.pb.h"
 
-#ifndef __IMG_SVC_PROTO_IMPL_H
-#define __IMG_SVC_PROTO_IMPL_H
+
+
 
 
 namespace vstk {
@@ -16,7 +26,7 @@ namespace vstk {
     //     ::grpc::Status ManageExchange(::grpc::ServerContext* context, const ::ManageExchangeRequest* request, ::ManageExchangeResponse* response);
     // };
 
-    class VstkRPCService final : public VstkService::Service {
+    class VstkRPCService final : public VstkService::Service {      
         public:
             grpc::Status CreateStereoRuntime(grpc::ServerContext* context, const CreateStereoRTRequest* request, CommonRTResponse* response);
             grpc::Status ManageRuntime(grpc::ServerContext* context, const ManageRTRequest* request, CommonRTResponse* response);
@@ -25,4 +35,5 @@ namespace vstk {
     };
 }
 
+#endif
 #endif

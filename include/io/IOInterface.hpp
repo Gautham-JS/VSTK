@@ -5,11 +5,15 @@
 #ifndef __VSTK_IO_INTERFACE_H_
 #define __VSTK_IO_INTERFACE_H_
 
+#include <atomic>
+#include <shared_mutex>
+
 #include "features/FeatureExtractor.hpp"
 #include "config/Config.hpp"
 #include "io/Persistence.hpp"
 #include "io/DiskIO.hpp"
 #include "utils/Logger.hpp"
+#include "utils/AsyncUtils.hpp"
 
 namespace vstk {
 
@@ -24,6 +28,8 @@ namespace vstk {
      *  -> Setup persistence layer for reference frames and other non volatile data.
      *  -> Write data types to data stores (Pointclouds, 2D point sets, frame positions etc for re-use).
      */
+
+    static std::shared_mutex io_mtx;
 
     class IOInterface {
         protected:
@@ -64,11 +70,23 @@ namespace vstk {
             ImageContextHolder get_next_frame() override;
     };
 
-    class RosIO final : public IOInterface {
-        private:
+    #ifdef VSTK_IO_ROS
+        class RosIO final : public IOInterface {
+            private:
+                std::shared_mutex mtx;
+                std::queue<StereoImageContextPair> stereo_queue; 
+            
+            public:
+                explicit RosIO(VstkConfig conf) : IOInterface(conf) {}
+                int initialize() override;
 
-    };
+                bool is_io_active() override;
+                StereoImageContextPair get_next_stereo_frame() override;
+                ImageContextHolder get_next_frame() override;
+        };
+    #endif
 
+    
 }
 
 #endif

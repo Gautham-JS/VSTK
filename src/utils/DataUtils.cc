@@ -33,5 +33,5 @@ void vstk::dump_data_pts_to_file(std::string filename, std::vector<vstk::FPSData
     avg_fps = (sigma_fps / data_pts.size());
     fs << "average_fps" << avg_fps;
     fs.release();
-    INFOLOG("File %s written successfully, data dump complete", filename);
+    DBGLOG("File %s written successfully, data dump complete", filename);
 }

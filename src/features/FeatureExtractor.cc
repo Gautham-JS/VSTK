@@ -11,10 +11,12 @@
 using namespace vstk;
 
 ImageContextHolder::ImageContextHolder(cv::Mat image) {
+    INFOLOG("[THR_ID : %s] CONSTRUCTING IMAGE...", std::this_thread::get_id());
   this->image_data = image;
   this->image_id = generate_uuid();
   this->image_width = image.rows;
   this->image_length = image.cols;
+  INFOLOG("[THR_ID : %s] CONSTRUCTING IMAGE DONE...", std::this_thread::get_id());
 }
 
 ImageContextHolder::ImageContextHolder(std::string image_path) {
@@ -69,7 +71,7 @@ void ImageContextHolder::clear_image_data() {
 }
 
 FeaturesHolder FeatureExtractor::run_internal(ImageContextHolder& image_ctx) {
-    INFOLOG("Running feature extract and compute engines");
+    DBGLOG("Running feature extract and compute engines");
     FeaturesHolder feature_holder;
     this->fextract->detect(
         image_ctx.get_image(), 

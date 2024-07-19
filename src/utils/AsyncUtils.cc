@@ -3,16 +3,16 @@
 
 using namespace vstk;
 
-static thread_local std::atomic_bool is_async;
 static thread_local std::string runtime_id;
-static thread_local bool is_headless_rt;
+static std::atomic_bool async;
+static std::atomic_bool is_headless_rt;
 
 void vstk::set_async(bool is_async) {
-    is_async = true;
+    async.store(is_async);
 }
 
 bool vstk::is_async() {
-    return is_async;
+    return async.load();
 }
 
 std::string vstk::get_rt_id() {
@@ -24,9 +24,9 @@ void vstk::set_rt_id(std::string rt_id) {
 }
 
 void vstk::set_headless(bool headless) {
-    is_headless_rt = headless;
+    is_headless_rt.store(headless);
 }
 
 bool vstk::is_headless() {
-    return is_headless_rt;
+    return is_headless_rt.load();
 }

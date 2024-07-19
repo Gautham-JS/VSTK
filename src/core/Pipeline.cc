@@ -46,6 +46,8 @@ void StereoPipeline::start() {
     DBGLOG("\t--> Point Matching Algorithm :: %s\n", vstk::enum_to_str(conf.get_match_algorithm()));
     DBGLOG("\n");
 
+    vstk::Logger::get().set_level(VSTK_WARN);
+
     Timer t_main = get_timer("Stereo Pipeline");
     FeatureExtractor extractor(this->conf);
     FeatureMatcher matcher(this->conf);
@@ -86,7 +88,6 @@ void StereoPipeline::start() {
     int curr_idx = 0;
     while (this->io_layer->is_io_active() && !this->interrupt_flag) {
         start_timer(t_main);
-
         stereo_pair = this->io_layer->get_next_stereo_frame();
         ImageContextHolder prev_im = this->persistence_layer->get_reference_stereo_frame(rt_id)->first;
         ImageContextHolder curr_im(stereo_pair.first);
@@ -115,9 +116,9 @@ void StereoPipeline::start() {
             if (stereo_matches.good_matches.size() > 40) {
                 triangulator.run_sparse(curr_im, curr_im_r, stereo_matches);
             } else {
-                WARNLOG("Too few matches to triangulate points, skipping trinagulation phase");
+                INFOLOG("Too few matches to triangulate points, skipping trinagulation phase");
             }
-            INFOLOG("Inserting image %s as new reference image", curr_im.get_image_id());
+            DBGLOG("Inserting image %s as new reference image", curr_im.get_image_id());
             this->persistence_layer->set_reference_stereo_frame(rt_id, {curr_im, curr_im_r});
         }
         end_timer(t_main);
@@ -133,4 +134,5 @@ void StereoPipeline::start() {
         }
         curr_idx++;
     }
+    INFOLOG("Pipeline in runtime with ID %s exitted safely.", this->rt_id);
 }

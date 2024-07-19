@@ -7,6 +7,7 @@
 #include <future>
 
 #include <unordered_map>
+#include <vector>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
@@ -113,16 +114,14 @@ namespace vstk {
     };
 
     class RuntimeManager {
-        private:
-            inline static std::unordered_map<std::string, RuntimePtr_t> runtimes;
-            inline static std::shared_mutex mtx;
-            
         public: 
             std::string start_runtime(RuntimePtr_t &rt);
             std::string start_runtime(VstkConfig config);
             RuntimePtr_t get_runtime(std::string rt_id);
             bool is_running(std::string rt_id);
             int stop_runtime(std::string rt_id);
+
+            std::vector<std::string> get_all_running_rts();
     };
 
 }

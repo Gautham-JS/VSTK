@@ -22,10 +22,22 @@ const std::string working_dir = "/home/gjs/software/vstk/data/";
 const std::string im_pattens = "/media/gjs/Windows-SSD/Data/TUM/dataset-outdoors3_512_16/mav0/cam0/data/*.png";
 
 void run_locally(VstkConfig conf) {
+    vstk::set_async(true);
+    vstk::describe_config(conf);
     RuntimeManager rt_manager;
+    VstkConfig conf2(conf);
+
+    vstk::set_headless(false);
+
     std::string id1 = rt_manager.start_runtime(conf);
-    std::string id2 = rt_manager.start_runtime(conf);
-    this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::string id2 = rt_manager.start_runtime(conf2);
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::string id3 = rt_manager.start_runtime(conf);
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::string id4 = rt_manager.start_runtime(conf2);
+
+    this_thread::sleep_for(std::chrono::seconds(30));
     if(!rt_manager.is_running(id1)) {
         ERRORLOG("Running RT1 shown as not running by manager");
         exit(-1);
@@ -36,8 +48,10 @@ void run_locally(VstkConfig conf) {
     }
     INFOLOG("Runtime %s and %s running as expected, gracefully stopping both", id1, id2);
     rt_manager.stop_runtime(id1);
-    this_thread::sleep_for(std::chrono::seconds(2));
     rt_manager.stop_runtime(id2);
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    rt_manager.stop_runtime(id3);
+    rt_manager.stop_runtime(id4);
 }
 
 void print_usage_and_unalive(char *prog_name) {

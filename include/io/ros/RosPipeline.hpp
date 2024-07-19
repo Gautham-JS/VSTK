@@ -1,6 +1,8 @@
 #ifndef __VSTK_ROS_PIPELINE_H
 #define __VSTK_ROS_PIPELINE_H
 
+
+#ifdef VSTK_IO_ROS_ENABLED
 #include <stdio.h>
 #include <vector>
 #include <string>
@@ -81,5 +83,7 @@ namespace vstk {
             explicit VstkCore(VstkConfig conf);
     };
 }
+
+#endif
 
 #endif

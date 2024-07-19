@@ -17,46 +17,52 @@ set(ABSL_ENABLE_INSTALL ON)
 set(gRPC_RE2_PROVIDER "module")
 
 set(CMAKE_BUILD_TYPE "Debug")
+if(TP_DIR)
+  message("Custom Thirdparty directory defined as {$TP_DIR}")
+else()
+  set(TP_DIR "${CMAKE_SOURCE_DIR}/thirdparty/")
+endif()
+
 
 set (WITH_OPENGL ON)
 set (WITH_OPENCL ON)
 set (WITH_PROTOBUF OFF)
 set (OPENCV_GENERATE_PKGCONFIG ON)
-set (OPENCV_EXTRA_MODULES_PATH ${CMAKE_SOURCE_DIR}/thirdparty/opencv/opencv_contrib/modules)
+set (OPENCV_EXTRA_MODULES_PATH ${TP_DIR}/opencv/opencv_contrib/modules)
 set (BUILD_SHARED_LIBS ON)
 
 
-message("${CMAKE_SOURCE_DIR}/thirdparty/grpc/grpc/")
+message("${TP_DIR}/grpc/grpc/")
 
 
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/")
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/")
-list(APPEND CMAKE_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/lib/")
-list(APPEND CMAKE_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/lib/")
+list(APPEND CMAKE_PREFIX_PATH "${TP_DIR}/grpc/install/")
+list(APPEND CMAKE_PREFIX_PATH "${TP_DIR}/opencv/install/")
+list(APPEND CMAKE_LIBRARY_PATH "${TP_DIR}/opencv/install/lib/")
+list(APPEND CMAKE_LIBRARY_PATH "${TP_DIR}/grpc/install/lib/")
 
 
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-link_directories("${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/lib/")
+link_directories("${TP_DIR}/grpc/install/lib/")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(PROTO_SOURCES ${CMAKE_SOURCE_DIR}/protobuf/image_svc.proto)
 
-set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/thirdparty/opencv/build/")
-set(gRPC_DIR "${CMAKE_SOURCE_DIR}/thirdparty/grpc/build/**")
+set(OpenCV_DIR "${TP_DIR}/opencv/build/")
+set(gRPC_DIR "${TP_DIR}/grpc/build/**")
 
 
 find_package( OpenCV REQUIRED )
 find_package( Boost REQUIRED COMPONENTS log filesystem)
-if(TRANSPORT_GRPC)
+if(USE_GRPC)
   if(USE_SYSTEM_GRPC)
     find_package( Protobuf REQUIRED)
     find_package( gRPC REQUIRED )
     find_program(_PROTOBUF_PROTOC protoc)
     find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
   else()
-    add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/grpc/grpc/)
+    add_subdirectory(${TP_DIR}/grpc/grpc/ ${TP_DIR}/grpc/bin/)
     set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
     set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
   endif()
@@ -68,7 +74,7 @@ if(TRANSPORT_GRPC)
   set(_GRPC_GRPCPP_UNSECURE grpc++_unsecure)
   set(_GRPC_GRPCPP grpc++)
 
-  add_compile_definitions(VSTK_TRANSPORT_PROTO_GRPC)
+  add_compile_definitions(VSTK_IO_GRPC)
 endif()
 
 if(USE_ROS)
@@ -78,7 +84,7 @@ if(USE_ROS)
   find_package(sensor_msgs REQUIRED)
   find_package(cv_bridge REQUIRED)
   find_package(image_transport REQUIRED)
-  add_compile_definitions(VSTK_USE_ROS)
+  add_compile_definitions(VSTK_IO_ROS_ENABLED)
   
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
@@ -122,8 +128,8 @@ include_directories( ${CMAKE_SOURCE_DIR}/protos/ )
 
 include_directories(
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
-  "${CMAKE_SOURCE_DIR}/thirdparty/opencv/install/include/opencv4/"
-  "${CMAKE_SOURCE_DIR}/thirdparty/grpc/install/include/"
+  "${TP_DIR}/opencv/install/include/opencv4/"
+  "${TP_DIR}/grpc/install/include/"
 ) 
 
 
@@ -148,7 +154,7 @@ message("\n\n")
 message("==> SYSTEM LIBRARY CHECKS\n")
 check_lib("OpenCV" "OpenCV_LIBS")
 check_lib("Boost" "Boost_LIBRARIES")
-if(TRANSPORT_GRPC)
+if(USE_GRPC)
   if(USE_SYSTEM_GRPC)
     check_lib("Protocol Buffer" "_PROTOBUF_LIBPROTOBUF")
     check_lib("gRPC C++" _GRPC_GRPCPP)
@@ -165,7 +171,91 @@ endif()
 
 message("\n== SYSTEM LIBRARY CHECK COMPLETE\n")
 
-if(TRANSPORT_GRPC)
+add_library(
+    features_vstk SHARED
+    src/features/FeatureExtractor.cc
+    src/features/FeatureMatcher.cc
+)
+target_link_libraries( features_vstk ${Boost_LIBRARIES})
+set(VSTK_LIBS "")
+list(APPEND VSTK_LIBS features_vstk)
+
+add_library(
+    config_vstk SHARED
+    src/config/Config.cc
+)
+target_link_libraries(config_vstk  ${Boost_LIBRARIES})
+list(APPEND VSTK_LIBS config_vstk)
+
+add_library(
+    io_vstk SHARED
+    src/io/DiskIO.cc
+    src/io/Serializer.cc
+    src/io/IOInterface.cc
+)
+target_link_libraries(io_vstk  ${Boost_LIBRARIES})
+list(APPEND VSTK_LIBS io_vstk)
+
+add_library(
+    persistence_vstk SHARED
+    src/io/Persistence.cc
+)
+target_link_libraries(persistence_vstk  ${Boost_LIBRARIES})
+list(APPEND VSTK_LIBS persistence_vstk)
+
+add_library(
+    transforms_3d_vstk SHARED
+    src/core/Triangulation.cc
+)
+target_link_libraries(transforms_3d_vstk config_vstk ${Boost_LIBRARIES} ${OpenCV_LIBS})
+list(APPEND VSTK_LIBS transforms_3d_vstk)
+
+add_library(
+    utils_vstk SHARED
+    src/utils/ObjectLifecycle.cc
+    src/utils/TimerUtils.cc
+    src/utils/CvUtils.cc
+    src/utils/GenericUtils.cc
+    src/utils/AsyncUtils.cc
+    src/utils/DataUtils.cc
+)
+target_link_libraries(utils_vstk  ${Boost_LIBRARIES} ${OpenCV_LIBS})
+list(APPEND VSTK_LIBS utils_vstk)
+
+add_library(
+    calib_kit_vstk SHARED
+    src/calib/CameraCalibration.cc
+    src/config/CalibConfig.cc
+)
+target_link_libraries(calib_kit_vstk  config_vstk ${Boost_LIBRARIES})
+
+add_library(
+    pipelines_vstk SHARED
+    src/core/Pipeline.cc
+)
+target_link_libraries(pipelines_vstk io_vstk features_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
+list(APPEND VSTK_LIBS pipelines_vstk)
+
+add_library(
+    runtimes_vstk SHARED
+    src/core/Runtime.cc
+)
+target_link_libraries(runtimes_vstk pipelines_vstk io_vstk features_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
+list(APPEND VSTK_LIBS runtimes_vstk)
+
+
+add_executable( vstk src/main.cc )
+
+target_link_libraries( vstk ${Boost_LIBRARIES})
+
+target_link_libraries( vstk ${VSTK_LIBS})
+target_link_libraries( vstk ${OpenCV_LIBS})
+
+add_executable( calib_kit src/calib.cc )
+target_link_libraries( calib_kit ${Boost_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries( calib_kit calib_kit_vstk persistence_vstk)
+
+if(USE_GRPC)
   add_custom_command(
     OUTPUT "${svc_proto_srcs}" "${svc_proto_hdrs}" "${svc_grpc_srcs}" "${svc_grpc_hdrs}"
     COMMAND ${_PROTOBUF_PROTOC}
@@ -183,93 +273,22 @@ if(TRANSPORT_GRPC)
     ${svc_proto_hdrs}
   )
   target_link_libraries( svc_grpc_proto  grpc++ grpc++_unsecure libprotobuf)
+  target_link_libraries( config_vstk svc_grpc_proto)
+  list(APPEND VSTK_LIBS svc_grpc_proto)
 
-  add_library(  
-    image_svc_vstk SHARED
-    src/protoimpl/ImageSvc.cc
+  add_library(
+    rpc_svc_vstk SHARED
+    src/protoimpl/RpcSvc.cc
   )
-  target_link_libraries( image_svc_vstk  grpc++ grpc++_unsecure libprotobuf ${Boost_LIBRARIES})
-endif()
+  target_link_libraries( rpc_svc_vstk ${VSTK_LIBS})
+  target_link_libraries( rpc_svc_vstk grpc++ grpc++_unsecure libprotobuf )
 
+  add_executable( vstk_svc src/main_svc.cc )
+  target_link_libraries( vstk_svc ${VSTK_LIBS})
+  target_link_libraries( vstk_svc ${OpenCV_LIBS})
 
-add_library(
-    features_vstk SHARED
-    src/features/FeatureExtractor.cc
-    src/features/FeatureMatcher.cc
-)
-target_link_libraries( features_vstk ${Boost_LIBRARIES})
-
-add_library(
-    config_vstk SHARED
-    src/config/Config.cc
-)
-target_link_libraries(config_vstk  ${Boost_LIBRARIES})
-
-add_library(
-    io_vstk SHARED
-    src/io/DiskIO.cc
-    src/io/Serializer.cc
-    src/io/IOInterface.cc
-)
-target_link_libraries(io_vstk  ${Boost_LIBRARIES})
-
-add_library(
-    persistence_vstk SHARED
-    src/io/Persistence.cc
-)
-target_link_libraries(persistence_vstk  ${Boost_LIBRARIES})
-
-add_library(
-    transforms_3d_vstk SHARED
-    src/core/Triangulation.cc
-)
-target_link_libraries(transforms_3d_vstk config_vstk ${Boost_LIBRARIES} ${OpenCV_LIBS})
-
-add_library(
-    utils_vstk SHARED
-    src/utils/ObjectLifecycle.cc
-    src/utils/TimerUtils.cc
-    src/utils/CvUtils.cc
-    src/utils/GenericUtils.cc
-    src/utils/AsyncUtils.cc
-    src/utils/DataUtils.cc
-)
-target_link_libraries(utils_vstk  ${Boost_LIBRARIES} ${OpenCV_LIBS})
-
-add_library(
-    calib_kit_vstk SHARED
-    src/calib/CameraCalibration.cc
-    src/config/CalibConfig.cc
-)
-target_link_libraries(calib_kit_vstk  config_vstk ${Boost_LIBRARIES})
-
-add_library(
-    pipelines_vstk SHARED
-    src/core/Pipeline.cc
-)
-target_link_libraries(pipelines_vstk io_vstk features_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
-
-add_library(
-    runtimes_vstk SHARED
-    src/core/Runtime.cc
-)
-target_link_libraries(runtimes_vstk pipelines_vstk io_vstk features_vstk config_vstk transforms_3d_vstk persistence_vstk utils_vstk ${Boost_LIBRARIES})
-
-
-add_executable( vstk src/main.cc )
-
-target_link_libraries( vstk ${Boost_LIBRARIES})
-
-target_link_libraries( vstk features_vstk utils_vstk io_vstk config_vstk pipelines_vstk runtimes_vstk transforms_3d_vstk persistence_vstk)
-target_link_libraries( vstk ${OpenCV_LIBS})
-
-add_executable( calib_kit src/calib.cc )
-target_link_libraries( calib_kit ${Boost_LIBRARIES} ${OpenCV_LIBS})
-target_link_libraries( calib_kit calib_kit_vstk persistence_vstk)
-
-if(TRANSPORT_GRPC)
-  target_link_libraries( vstk svc_grpc_proto image_svc_vstk )
-  target_link_libraries( vstk grpc++ grpc++_unsecure libprotobuf )
+  target_link_libraries( vstk_svc svc_grpc_proto rpc_svc_vstk )
+  target_link_libraries( vstk_svc grpc++ grpc++_unsecure libprotobuf )
 endif()
 
 if(USE_ROS) 

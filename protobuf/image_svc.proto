@@ -1,6 +1,16 @@
 syntax = "proto3";
 
+
 enum rt_state {
+  STARTED = 0;
+  RUNNING = 1;
+  STOPPEED = 2;
+  INTERRUPTED = 3;
+  ERRORED = 4;
+}
+
+
+enum rt_signal {
   START = 0;
   END = 1;
   INTERRUPT = 3;
@@ -28,7 +38,7 @@ message GetRTStatusMessage {
 
 message RTStatusResponse {
   string rt_id = 1;
-  string state = 2;
+  int32 rt_state = 2;
   string ft_extraction_algo = 3;
   string ft_compute_algo = 4;
   string ft_matching_algo = 5;
@@ -82,22 +92,17 @@ message CreateStereoRTRequest {
 
   optional string rt_id = 5;
   optional bool override_state = 6;
-  optional bool is_cfg_file_used = 7;
-
-  oneof data {
-    bytes cfg_data = 8;
-  };
 }
 
 message ManageRTRequest {
   string rt_id = 1;
-  rt_state state = 2;
+  int32 rt_signal = 2;
   optional string additional_info = 3;
 }
 
 message CommonRTResponse {
-	string state = 1;
-	string exchange_id = 2;
+	int32 rt_state = 1;
+	string rt_id = 2;
 	
 	optional string error_id = 3;
 	optional string error_message = 4;

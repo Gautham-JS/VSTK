@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+
 using namespace vstk;
 
 
@@ -55,6 +56,7 @@ int FileIO::initialize() {
 
 
 StereoImageContextPair FileIO::get_next_stereo_frame() {
+    std::unique_lock<std::shared_mutex>(io_mtx);
     if(this->fs_iptr >= this->fs_ilimit) {
         ERRORLOG("File iteration complete, resetting file-iteration ptr");
         this->fs_iptr = 0;

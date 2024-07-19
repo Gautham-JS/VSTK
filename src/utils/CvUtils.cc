@@ -165,7 +165,7 @@ void vstk::imshow(std::string msg, cv::Mat image) {
     if(vstk::is_async()) {
         fmsg = vstk::fmt_str("%s [%s]", msg.c_str(), vstk::get_rt_id().c_str());
     }
-    INFOLOG("Format header for image %s : %s", msg, fmsg);
+    //INFOLOG("Format header for image %s : %s", msg, fmsg);
     if(!vstk::is_headless()) {
         cv::imshow(fmsg, image);
     }
