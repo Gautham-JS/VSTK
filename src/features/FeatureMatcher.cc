@@ -1,5 +1,8 @@
 #include "features/FeatureMatcher.hpp"
 #include "utils/Logger.hpp"
+#include "utils/GenericUtils.hpp"
+#include "utils/AsyncUtils.hpp"
+#include "utils/CvUtils.hpp"
 
 #include <memory.h>
 #include <mutex>
@@ -134,7 +137,7 @@ void FeatureMatcher::display_match_overlap(ImageContextHolder current_image, Ima
     cv::vconcat(curr_image_data, img, img);
     cv::vconcat(img, img_delta ,joined);
     cv::resize(joined, joined, {joined.cols/2, joined.rows/2});
-    cv::imshow("FLANN Matches", joined);
+    vstk::imshow("FLANN Matches", joined);
     int key = (cv::waitKey(1) & 0xFF);
     if(key == 'q') {
         INFOLOG("Caught 'q' keypress, exitting process.");
@@ -154,7 +157,7 @@ void FeatureMatcher::display_matches(ImageContextHolder image1_ctx, ImageContext
         im_matches,
         cv::Scalar(0, 255, 0)
     );
-    cv::imshow("FLANN Matches", im_matches);
+    vstk::imshow("FLANN Matches", im_matches);
     int key = (cv::waitKey(1) & 0xFF);
     if(key == 'q') {
         INFOLOG("Caught 'q' keypress, exitting process.");

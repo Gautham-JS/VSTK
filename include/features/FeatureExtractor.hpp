@@ -86,7 +86,11 @@ namespace vstk {
             size_t n_min, n_max;
             size_t nc_min, nc_max;
             int fth_min, fth_max, th_step;
-            std::vector<cv::Ptr<cv::Feature2D>> detectors;
+            int starting_threshold = 20;
+
+            std::vector<int> cell_thresholds;
+            std::unordered_map<int, cv::Ptr<cv::Feature2D>> detector_lut;
+
             std::vector<int> thresholds;
             cv::Mat debug_threshold_map;
 

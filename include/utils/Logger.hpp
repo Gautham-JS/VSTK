@@ -13,18 +13,24 @@
 #define WARNLOG(format, ...) {vstk::Logger::get().log_warn(format, ##__VA_ARGS__);}
 #define IS_VSTK_DEBUG vstk::Logger::get().is_debug_enabled()
 
+#define VSTK_ERROR 0
+#define VSTK_WARN 1
+#define VSTK_INFO 2
+#define VSTK_DEBUG 3
+
 namespace vstk {
     
     class Logger {
         private:
             bool is_debug = false;
+            int level = 2;
 
         protected:
             Logger() {}
 
         public:
             static Logger& get() {
-                static Logger logger;
+                static thread_local Logger logger;
                 return logger;
             }
 
@@ -39,18 +45,29 @@ namespace vstk {
                 is_debug = false; 
             }
 
+            void set_level(int vstk_level) {
+                level = vstk_level;
+            }
+
+            int get_level() {
+                return level;
+            }
+
             bool is_debug_enabled() {
                 return this->is_debug;
             }
 
             template<typename... Arguments>
             void log_info(const std::string& fmt, const Arguments&... args) {
+                if(level < VSTK_INFO) {
+                    return;
+                }
                 auto fmtMsg = boost::str((boost::format(fmt) % ... % args));
                 BOOST_LOG_TRIVIAL(info) << fmtMsg;
             }
             template<typename... Arguments>
             void log_debug(const std::string& fmt, const Arguments&... args) {
-                if(!is_debug) {
+                if(!is_debug || level < VSTK_DEBUG) {
                     return;
                 }
                 auto fmtMsg = boost::str((boost::format(fmt) % ... % args));
@@ -68,6 +85,9 @@ namespace vstk {
             }
             template<typename... Arguments>
             void log_warn(const std::string& fmt, const Arguments&... args) {
+                if(level < VSTK_WARN) {
+                    return;
+                }
                 auto fmtMsg = boost::str((boost::format(fmt) % ... % args));
                 BOOST_LOG_TRIVIAL(warning) << fmtMsg;
             }

@@ -20,11 +20,21 @@ vstk::Timer vstk::get_timer(std::string marker) {
 }
 
 void vstk::log_timer(vstk::Timer timer, FILE* fptr) {
+    if(vstk::Logger::get().get_level() < VSTK_INFO){
+        return;
+    }
     fprintf(fptr, "\n======================================\nMarker : %s\nCompute Time : %ld ms\n======================================\n", timer.marker.c_str(), timer.elapsed_ms);
 }
 
+double vstk::get_fps(vstk::Timer timer) {
+    return (1000 / ((double) timer.elapsed_ms));
+}
+
 void vstk::log_fps(vstk::Timer timer, FILE* fptr) {
-    double fps = (1000 / ((double) timer.elapsed_ms));
+    double fps = get_fps(timer);
+    if(vstk::Logger::get().get_level() < VSTK_INFO){
+        return;
+    }
     fprintf(fptr, "\n======================================\nMarker : %s\nCompute Time : %ld ms\nFPS : %f\n======================================\n", 
         timer.marker.c_str(), 
         timer.elapsed_ms,

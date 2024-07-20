@@ -2,23 +2,29 @@
 ---
 
 
-directory_pattern_l: "/media/gjs/Windows-SSD/Data/Kitti/dataset/sequences/00/image_0/*.png"
-directory_pattern_r: "/media/gjs/Windows-SSD/Data/Kitti/dataset/sequences/00/image_1/*.png"
+directory_pattern_l: "/mnt/c/Data/Kitti/dataset/sequences/00/image_0/*.png"
+directory_pattern_r: "/mnt/c/Data/Kitti/dataset/sequences/00/image_1/*.png"
 
 sparse_detector:
-  feature_extraction_algorithm: "ADAFAST"
+  feature_extraction_algorithm: "FAST"
   descriptor_compute_algorithm: "ORB"
-  matcher_algorithm: "flann"
-  
+  matcher_algorithm: "BF"
+
+persistence:
+   type: "IN_MEMORY"
+
+io:
+   type: "DISK"
+
 adafast:
-  min_count: 200
-  max_count: 1000
-  min_threshold : 5
+  min_count: 500
+  max_count: 4000
+  min_threshold : 10
   max_threshold : 120
   cell_size_x : 4
   cell_size_y : 4
-  thread_pool_size : 4
-  threshold_step_size : 5
+  thread_pool_size : 9
+  threshold_step_size : 10
 
 cam_params:
    stereo_cam_params:
@@ -55,4 +61,4 @@ cam_params:
          rows: 1
          cols: 3
          dt: d
-         data: [ 5.3716571886441788e-01, 0., 0. ]
+         data: [ -5.3716571886441788e-01, 0., 0. ]

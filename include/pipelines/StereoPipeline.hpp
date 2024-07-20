@@ -15,6 +15,7 @@
 #include "core/Triangulation.hpp"
 
 namespace vstk {
+
   class StereoPipeline {
     private:
       VstkConfig conf;

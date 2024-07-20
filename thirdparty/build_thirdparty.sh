@@ -110,10 +110,10 @@ function install_opencv {
 
 
 function install_grpc {
-  # if ! check_module "grpc" ; then
-  #   echo "gRPC not selected for installation, skipping"
-  #   return
-  # fi
+  if ! check_module "grpc" ; then
+     echo "gRPC not selected for installation, skipping"
+     return
+  fi
   echo "Installing gRPC"
   export GRPC_INSTALL_DIR="$TP_BUILD_ROOT/grpc/install"
   if check_dir "$TP_BUILD_ROOT/grpc"; then
@@ -125,30 +125,6 @@ function install_grpc {
     eval "git clone --recurse-submodules -b v$GRPC_VER --depth 1 --shallow-submodules https://github.com/grpc/grpc"
     assert_rc $? "Failed to clone gRPC"
   fi
-
-  # if check_dir "$TP_BUILD_ROOT/grpc/build"; then
-  #   cd "$TP_BUILD_ROOT/grpc/build"
-  # else
-  #   mkdir -p "$TP_BUILD_ROOT/grpc/build"
-  #   cd "$TP_BUILD_ROOT/grpc/build"
-  # fi
-
-  #  echo "Building in $(pwd)"
-  #  cmake -D gRPC_INSTALL=ON \
-  #    -D gRPC_BUILD_TESTS=OFF \
-  #    -D BUILD_SHARED_LIBS=ON \
-  #    -D CMAKE_INSTALL_PREFIX=$GRPC_INSTALL_DIR \
-  #    -D CMAKE_BUILD_TYPE=Release \
-  #    $TP_BUILD_ROOT/grpc/grpc
-  #  assert_rc $? "Failed to CMake gRPC"
-
-  # make -j$(( $(nproc) - 1 ))
-  # assert_rc $? "Failed to compile gRPC"
-
-  # make install
-  # assert_rc $? "Failed to install gRPC locally"
-
-  popd
 }
 
 function install_boost {

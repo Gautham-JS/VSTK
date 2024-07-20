@@ -1,98 +1,138 @@
 #include "core/Pipeline.hpp"
-#include "utils/TimerUtils.hpp"
+
 #include "core/Triangulation.hpp"
-
-
+#include "utils/DataUtils.hpp"
+#include "utils/GenericUtils.hpp"
+#include "utils/TimerUtils.hpp"
 
 using namespace vstk;
 
 const std::string working_dir = "/home/gjs/software/vstk/data/";
 
-StereoPipeline::StereoPipeline() {}
+void IPipeline::set_interrupt_flag(bool interrupt_flag) {
+    this->interrupt_flag.store(interrupt_flag);
+}
 
-void StereoPipeline::start(VstkConfig conf) {
-    INFOLOG("Starting VSTK runtime in blocking mode with stereo configuration");
-    DBGLOG(
-        "\n=========================================================\nFeature Extraction Algorithm : %s\nDescriptor Compute Algorithm : %s\nFeature Matching Algorithm : %s\n=========================================================\n", 
-        vstk::enum_to_str(conf.get_feature_extraction_algo()), 
-        vstk::enum_to_str(conf.get_descriptor_compute_algo()),
-        vstk::enum_to_str(conf.get_match_algorithm())
-    );
-    DiskIO left_io(working_dir, "matches");
-    DiskIO right_io(working_dir, "matches");
-    FeatureExtractor extractor(conf);
-    FeatureMatcher matcher(conf);
-    StereoTriangulate triangulator(conf);
+StereoPipeline::StereoPipeline(vstk::VstkConfig conf) : 
+    IPipeline(conf) 
+{}
+StereoPipeline::StereoPipeline(vstk::VstkConfig conf, std::string rt_id) : 
+    IPipeline(conf, rt_id)
+{}
 
-
-    std::vector<std::string> left_files = left_io.list_directory(conf.get_stereo_src_1());
-    std::vector<std::string> right_files = right_io.list_directory(conf.get_stereo_src_2());
-    std::vector<ImageContextHolder> ref_image_list;
-    int cur_ptr = 1;
-    int prev_ptr = 0;
-
-
-    if(left_files.size() != right_files.size()) {
-        ERRORLOG("Filesystem setup error : Left and Right stereo image file sets have different sizes");
-        exit(-1);
+void StereoPipeline::initialize() {
+    INFOLOG("Initializing Stereo pipeline");
+    if(this->rt_id.empty()) {
+        INFOLOG("Stereo pipeline does not have an associated Runtime ID, generating new rt_id");
+        this->rt_id = vstk::generate_random_string(16);
+        DBGLOG("Built new random rt_id as %s", this->rt_id);
     }
+    if (this->io_layer->initialize() != vstk::enum_as_integer(IO_ERROR_STATES::OK)) {
+        throw std::runtime_error("Failed to initialize IO layer");
+    }
+    this->set_async_ctx();
+    // TODO : Add return code for this initialization as its a critical operation
+    // for the runtime
+    this->persistence_layer->initialize();
+    INFOLOG("Completed stereo pipeline initialization");
+}
 
-    Timer t_main = get_timer("Main");
+void StereoPipeline::start() {
+    INFOLOG("Starting Stereo Pipeline");
+    DBGLOG("\n\n");
+    DBGLOG("\t--> Runtime ID :: %s\n", this->rt_id);
+    DBGLOG("\t--> Feature Extraction Algorithm :: %s\n", vstk::enum_to_str(conf.get_feature_extraction_algo()));
+    DBGLOG("\t--> Descriptor Compute Algorithm :: %s\n", vstk::enum_to_str(conf.get_descriptor_compute_algo()));
+    DBGLOG("\t--> Point Matching Algorithm :: %s\n", vstk::enum_to_str(conf.get_match_algorithm()));
+    DBGLOG("\n");
 
-    //grab images from left and right sources
-    ImageContextHolder image_left(left_files[0]);
-    ImageContextHolder image_right(right_files[0]);
-    extractor.run(image_left);
-    extractor.run(image_right);
-    MatchesHolder stereo_matches = matcher.run(image_left, image_right);
-    
-    //triangulate reference points
-    INFOLOG("Running triangulator...");
-    triangulator.run_sparse(image_left, image_right, stereo_matches);
+    vstk::Logger::get().set_level(VSTK_WARN);
 
-    ref_image_list.push_back(image_left);
+    Timer t_main = get_timer("Stereo Pipeline");
+    FeatureExtractor extractor(this->conf);
+    FeatureMatcher matcher(this->conf);
+    StereoTriangulate triangulator(this->conf);
+    std::vector<ImageContextHolder> image_list;
+    std::vector<FPSDataPt_t> fps_data;
 
-    while(cur_ptr < left_files.size()) {
+    StereoImageContextPair stereo_pair = this->io_layer->get_next_stereo_frame();
+
+    // Grab the genesis pair
+    ImageContextHolder iml(stereo_pair.first);
+    ImageContextHolder imr(stereo_pair.second);
+
+    // TODO : Parallelize this
+    extractor.run(iml);
+    extractor.run(imr);
+    MatchesHolder stereo_matches = matcher.run(iml, imr);
+
+    DBGLOG("Initial left features : %d, Descriptors : %d",
+           iml.get_features_holder().kps.size(),
+           iml.get_features_holder().descriptors.size()
+    );
+    DBGLOG("Initial right features : %d, Descriptors : %d",
+           imr.get_features_holder().kps.size(),
+           imr.get_features_holder().descriptors.size()
+    );
+
+    // TODO : Triangulation
+    // Next we triangulate the genesis pair for
+    // first reference 3D points and camera pose
+    // for initializing the Mapping and Localization models
+    triangulator.run_sparse(iml, imr, stereo_matches);
+
+    this->persistence_layer->set_reference_stereo_frame(rt_id, {iml, imr});
+
+    // TODO : iteration currently limited to filesystem, once data loader
+    // design is final, need to incorporate it here and use it polymorphically.
+    int curr_idx = 0;
+    while (this->io_layer->is_io_active() && !this->interrupt_flag) {
         start_timer(t_main);
-        INFOLOG("Loading image [ %d / %d ]", cur_ptr, left_files.size() - 1);
-        ImageContextHolder prev_image = ref_image_list[prev_ptr];
-        ImageContextHolder curr_image (left_files[cur_ptr]);
-        ImageContextHolder curr_image_r(right_files[cur_ptr]);
-        extractor.run(curr_image);
-        extractor.run(curr_image_r);
-        MatchesHolder match_holder = matcher.run(curr_image, prev_image);
-        stereo_matches = matcher.run(curr_image, curr_image_r);
-        if(stereo_matches.good_matches.size() > 40) {
-          triangulator.run_sparse(curr_image, curr_image_r, stereo_matches);
-        }
-        else {
-          WARNLOG("Too few feature matches to triangulate 3D points from");
-          WARNLOG("Triangulation phase skipped");
-        }
-        DBGLOG("Detected %d features.", match_holder.good_matches.size());
+        stereo_pair = this->io_layer->get_next_stereo_frame();
+        ImageContextHolder prev_im = this->persistence_layer->get_reference_stereo_frame(rt_id)->first;
+        ImageContextHolder curr_im(stereo_pair.first);
+        ImageContextHolder curr_im_r(stereo_pair.second);
 
-        if(match_holder.good_matches.size() == 0) {
-            WARNLOG("No good quality matches, rejecting image pair");
-            cur_ptr++;
+        DBGLOG("PrevId : %s, CurrentId : %s", prev_im.get_image_id(), curr_im.get_image_id());
+
+        extractor.run(curr_im);
+
+        MatchesHolder holder = matcher.run(curr_im, prev_im);
+        DBGLOG("Sequential Matcher detected %ld matches with new candidate image.", holder.good_matches.size());
+        if (holder.good_matches.size() == 0) {
+            WARNLOG("No matches detected in current and reference image, tracking lost.");
             continue;
         }
-        matcher.display_match_overlap(curr_image, prev_image, match_holder);
-        if(match_holder.good_matches.size() > 40) {
-            curr_image.clear_image_data();
-            cur_ptr++;
-            continue;
-        }
-        else {
-            INFOLOG("[INSERT] Diminishing match quantity, inserting reference image & clearing image %d from memory", prev_ptr);
-            // right here, we triangulate points for current ptr which will be prev_image in next iter.
-            ref_image_list[prev_ptr].clear_image_data();
-            ref_image_list.emplace_back(curr_image);
-            prev_ptr++;
+        // Render the match display window, for debugging.
+        matcher.display_match_overlap(curr_im, prev_im, holder);
+
+        if (holder.good_matches.size() > 40) {
+            INFOLOG("Skipped current image, good quantity of matches.");
+            curr_im.clear_image_data();
+        } else {
+            // matches below 40 but not zero, good point to sample new reference image
+            extractor.run(curr_im_r);
+            stereo_matches = matcher.run(curr_im, curr_im_r);
+            if (stereo_matches.good_matches.size() > 40) {
+                triangulator.run_sparse(curr_im, curr_im_r, stereo_matches);
+            } else {
+                INFOLOG("Too few matches to triangulate points, skipping trinagulation phase");
+            }
+            DBGLOG("Inserting image %s as new reference image", curr_im.get_image_id());
+            this->persistence_layer->set_reference_stereo_frame(rt_id, {curr_im, curr_im_r});
         }
         end_timer(t_main);
         log_fps(t_main, stdout);
-        cur_ptr++;
+        fps_data.push_back(
+            vstk::create_fps_data_pt(iml.get_image_id(), vstk::get_fps(t_main))
+        );
+
+        // dump frame time data to json file every 50 frames to avoid disk IO
+        // bottleneck for every frame.
+        if (curr_idx % 50 == 0) {
+            vstk::dump_data_pts_to_file("framerate_vstk.json", fps_data);
+        }
+        curr_idx++;
     }
-
+    INFOLOG("Pipeline in runtime with ID %s exitted safely.", this->rt_id);
 }
-

@@ -47,7 +47,6 @@ namespace vstk {
 
             std::vector<std::string> list_directory(std::string directory_pattern);            
 
-
             // functions for read/write files as chunks. 
             std::string read_chunk(std::string filename, uint32_t chunk_number);
             void write_chunk(std::string filename, std::string data, uint32_t chunk_number);

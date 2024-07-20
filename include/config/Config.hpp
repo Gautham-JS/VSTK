@@ -2,8 +2,13 @@
 #include <string>
 #include <utility>
 
+#include <stdlib.h>
+#include <getopt.h>
+
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
+
+#include "utils/Logger.hpp"
 
 #ifndef __VSTK_CONFIG_H_
 #define __VSTK_CONFIG_H_
@@ -20,9 +25,9 @@ namespace vstk {
     };
 
     enum SLAMType {
-        STEREO,
-        MONO,
-        RGBD
+        STEREO = 1,
+        MONO = 2,
+        RGBD = 3
     };
 
     enum class MatchAlgorithm {
@@ -45,12 +50,34 @@ namespace vstk {
         BRIEF
     };
 
+   enum class IO_ERROR_STATES:int {
+        GENERIC_ERROR = -1,
+        OK = 0,
+        CFG_READ_ERR = 1,
+        CFG_VALIDATION_ERR = 2,
+        INVALID_STATE_ERR = 500,
+    };
+
+    template <typename Enumeration>
+    auto enum_as_integer(Enumeration const value) -> typename std::underlying_type<Enumeration>::type {
+        return static_cast<typename std::underlying_type<Enumeration>::type>(value);
+    }
+
     enum CFG_LOAD_RETURN_CODES {
         OK = 0,
         ERROR_GENERIC = 1,
         ERROR_FORMAT = 2,
         ERROR_FILE_UNDEF = 3,
         ERROR_PROP_UNDEF = 4,
+    };
+
+    enum PERSISTENCE_MODES {
+        IN_PROCESS_MEMORY = 1,
+        REMOTE_IF = 2,
+    };
+
+    enum PERSISTENCE_REMOTE_PROVIDER {
+        REDIS = 1,
     };
 
     class MonoCamParams {
@@ -70,6 +97,51 @@ namespace vstk {
             int n_rows, n_cols;
     };
 
+    typedef struct RosConfig {
+        std::string left_image_topic = "/vstk/cam0/image_raw";
+        std::string right_image_topic = "/vstk/cam1/image_raw";
+        std::string left_cam_info_topic = "/vstk/cam0/info";
+        std::string right_cam_info_topic = "/vstk/cam1/info";
+        std::string p3d_topic = "/vstk/core/p3d";
+        std::string p2d_topic = "/vstk/core/p2d";
+    } RosConfig;
+
+
+    // struct for storing camera view state
+    typedef struct CamView {
+        cv::Mat Rc;
+        cv::Mat tc;
+        std::string view_id;
+        std::vector<cv::Point3f> pts3d;
+    } CamView;
+
+    // enum for configuring data persistence layer
+    typedef struct PersistenceConfig {
+        vstk::PERSISTENCE_MODES mode = vstk::PERSISTENCE_MODES::IN_PROCESS_MEMORY;
+        std::string rt_id = "";
+
+        vstk::PERSISTENCE_REMOTE_PROVIDER provider = vstk::PERSISTENCE_REMOTE_PROVIDER::REDIS;
+        std::string interface_url = "";
+    } PersistenceConfig;
+
+    // enum for renderer, stores state of perspective transformation frame
+    enum TransformState {
+        WORLD       = 1,
+        CAMERA      = 2
+    };
+
+    // high level struct wrapping all states for renderer thread
+    typedef struct RenderState {
+        std::string widnow_name = "VSTK";
+        int transform_state = TransformState::CAMERA;
+        int pt_size = 2;
+    } RenderState;
+
+    typedef std::shared_ptr<vstk::StereoCamParams> StereoCamParamsPtr;
+    typedef std::shared_ptr<MonoCamParams> MonoCamParamsPtr;
+    typedef std::shared_ptr<PersistenceConfig> PersistenceConfigPtr;
+
+
     int read_stereo_params(std::string filepath, StereoCamParams &params);
 
 
@@ -85,8 +157,11 @@ namespace vstk {
             DComputeAlgorithm descriptor_compute_algo = DComputeAlgorithm::ORB;
             MatchAlgorithm match_algo = MatchAlgorithm::BF;
 
-            std::shared_ptr<StereoCamParams> stereo_cam_params = nullptr;
-            std::shared_ptr<MonoCamParams> mono_cam_params = nullptr;
+            StereoCamParamsPtr stereo_cam_params = nullptr;
+            MonoCamParamsPtr mono_cam_params = nullptr;
+            PersistenceConfigPtr persistence_config = nullptr;
+
+            RosConfig ros_config;
 
             std::string run_data_source, stereo_im1_source, stereo_im2_source;
             std::string working_dir;
@@ -110,8 +185,6 @@ namespace vstk {
                 }
                 return rc;
             }
-
-
         public:
             explicit VstkConfig(RunType run_type, std::string working_dir);
             VstkConfig(RunType run_type, std::string working_dir, LoadScheme loading_scheme);
@@ -122,6 +195,7 @@ namespace vstk {
             int load_adafast_properties(cv::FileNode node);
             int load_detector_properties(cv::FileNode node);
             int load_camera_properties(cv::FileNode node);
+            int load_persistence_properties(cv::FileNode node);
 
             void set_working_dir(std::string working_dir);
             void set_run_data_src(std::string run_data_dir);
@@ -134,21 +208,33 @@ namespace vstk {
             void set_slam_type(SLAMType type);
             void set_stereo_cam_params(std::shared_ptr<StereoCamParams> stereo_params);
             void set_mono_cam_params(std::shared_ptr<MonoCamParams> mono_params);
+            void set_persistence_config(std::shared_ptr<PersistenceConfig> persistence_config);
 
             RunType get_run_type();
             LoadScheme get_load_scheme();
             std::string get_working_dir();
             std::string get_run_data_src();
             int get_num_features_retained();
-            inline std::string get_stereo_src_1() {
+            
+            std::string get_stereo_src_1() {
               return this->stereo_im1_source;
             }
 
-            inline std::string get_stereo_src_2() {
+            std::string get_stereo_src_2() {
               return this->stereo_im2_source;
             }
 
-            
+            RosConfig get_ros_config() {
+                return this->ros_config;
+            }
+
+            void set_stereo_src_1(const std::string src) {
+                this->stereo_im1_source = src;
+            }
+
+            void set_stereo_src_2(const std::string src) {
+                this->stereo_im2_source = src;
+            }
 
             bool is_config_file_used();
             
@@ -173,12 +259,15 @@ namespace vstk {
 
             std::shared_ptr<StereoCamParams> get_stereo_cam_params();
             std::shared_ptr<MonoCamParams> get_mono_cam_params();
+            std::shared_ptr<PersistenceConfig> get_persistence_config();
     };
 
+    void describe_config(VstkConfig conf);
+    
+    VstkConfig build_config_from_args(int argc, char**argv);
+
     std::string enum_to_str(FExtractionAlgorithm algo);
-
     std::string enum_to_str(DComputeAlgorithm algo);
-
     std::string enum_to_str(MatchAlgorithm algo);
 
     FExtractionAlgorithm extractor_algo_str_to_enum(std::string f_algorithm);

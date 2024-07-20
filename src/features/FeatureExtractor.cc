@@ -1,6 +1,8 @@
 #include "features/FeatureExtractor.hpp"
 #include "utils/Logger.hpp"
 #include "utils/CvUtils.hpp"
+#include "utils/GenericUtils.hpp"
+#include "utils/AsyncUtils.hpp"
 
 #include <functional>
 #include <random>
@@ -8,43 +10,13 @@
 
 using namespace vstk;
 
-static std::random_device               rd;
-static std::mt19937                     gen(rd());
-static std::uniform_int_distribution<>  dis(0, 15);
-static std::uniform_int_distribution<>  dis2(8, 11);
-
-std::string generate_uuid_v4() {
-    std::stringstream ss;
-    int i;
-    ss << std::hex;
-    for (i = 0; i < 8; i++) {
-        ss << dis(gen);
-    }
-    ss << "-";
-    for (i = 0; i < 4; i++) {
-        ss << dis(gen);
-    }
-    ss << "-4";
-    for (i = 0; i < 3; i++) {
-        ss << dis(gen);
-    }
-    ss << "-";
-    ss << dis2(gen);
-    for (i = 0; i < 3; i++) {
-        ss << dis(gen);
-    }
-    ss << "-";
-    for (i = 0; i < 12; i++) {
-        ss << dis(gen);
-    };
-    return ss.str();
-}
-
 ImageContextHolder::ImageContextHolder(cv::Mat image) {
+    INFOLOG("[THR_ID : %s] CONSTRUCTING IMAGE...", std::this_thread::get_id());
   this->image_data = image;
-  this->image_id = generate_uuid_v4();
+  this->image_id = generate_uuid();
   this->image_width = image.rows;
   this->image_length = image.cols;
+  INFOLOG("[THR_ID : %s] CONSTRUCTING IMAGE DONE...", std::this_thread::get_id());
 }
 
 ImageContextHolder::ImageContextHolder(std::string image_path) {
@@ -58,7 +30,7 @@ ImageContextHolder::ImageContextHolder(unsigned char *image_data, uint32_t image
 void ImageContextHolder::load_image_data(unsigned char *image_data, uint32_t image_length, uint32_t image_width) {
     this->image_width = image_width;
     this->image_length = image_length;
-    this->image_id = generate_uuid_v4();
+    this->image_id = generate_uuid();
     this->image_data = cv::Mat(image_width, image_length, CV_8UC1, image_data);
 }
 
@@ -99,7 +71,7 @@ void ImageContextHolder::clear_image_data() {
 }
 
 FeaturesHolder FeatureExtractor::run_internal(ImageContextHolder& image_ctx) {
-    INFOLOG("Running feature extract and compute engines");
+    DBGLOG("Running feature extract and compute engines");
     FeaturesHolder feature_holder;
     this->fextract->detect(
         image_ctx.get_image(), 
@@ -201,7 +173,7 @@ void FeatureExtractor::display_features(ImageContextHolder image_ctx) {
         cv::Scalar(0, 255, 0), 
         cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS
     );
-    cv::imshow("keypoints", kp_im);
+    vstk::imshow("Keypoints", kp_im);
     cv::waitKey();
 }
 
@@ -215,15 +187,30 @@ AdaptiveFastExtractor::AdaptiveFastExtractor(VstkConfig config) :
     conf(config)
 {
     size_t cell_length = this->cell_size.first * this->cell_size.second;
-    this->thresholds = std::vector<int>(cell_length, 20);
-    this->detectors = std::vector<cv::Ptr<cv::Feature2D>>(
-        cell_length,
-        cv::FastFeatureDetector::create(20) 
-    );
+    this->thresholds = std::vector<int>(cell_length, this->starting_threshold);
+
+    int i = this->starting_threshold;
+    int j = this->starting_threshold;
+    // load detectors for all possible threshold states to memory on initialization to save load times in runtime phase.
+    while(i <= fth_max || j >= fth_min) {
+        if(i <= fth_max) {
+            this->detector_lut.insert( {i, cv::FastFeatureDetector::create(i)} );
+            i += th_step;
+        }
+        if(j >= fth_min) {
+            this->detector_lut.insert( {j, cv::FastFeatureDetector::create(j)} );
+            j -= th_step;
+        }
+    }
 }
 
 void AdaptiveFastExtractor::extract_internal(cv::Mat image, std::vector<cv::KeyPoint> &kps, int cell_idx, std::pair<int, int> origin) {
-    this->detectors[cell_idx]->detect(
+    auto it = this->detector_lut.find(this->thresholds[cell_idx]);
+    if(it == this->detector_lut.end()) {
+        ERRORLOG("Cannot find detector for threshold %d", this->thresholds[cell_idx]);
+    }
+
+    it->second->detect(
         image, 
         kps
     );
@@ -238,7 +225,6 @@ void AdaptiveFastExtractor::down_step_threshold(int cell_idx) {
     if(thresholds[cell_idx] < fth_min) {
         thresholds[cell_idx] = fth_min;
     }
-    detectors[cell_idx] = cv::FastFeatureDetector::create(thresholds[cell_idx]);
 }
 
 void AdaptiveFastExtractor::up_step_threshold(int cell_idx) {
@@ -246,7 +232,6 @@ void AdaptiveFastExtractor::up_step_threshold(int cell_idx) {
     if(thresholds[cell_idx] > fth_max) {
         thresholds[cell_idx] = fth_max;
     }
-    detectors[cell_idx] = cv::FastFeatureDetector::create(thresholds[cell_idx]);
 }
 
 int AdaptiveFastExtractor::process_cell(
@@ -321,7 +306,7 @@ FeaturesHolder AdaptiveFastExtractor::extract(ImageContextHolder &im_ctx) {
         adj_iters[i] += cell_rc_set[i].get();
         holder.kps.insert(std::end(holder.kps), std::begin(cell_keypoint_set[i]), std::end(cell_keypoint_set[i]));
     }
-    INFOLOG("Completed synchronous extractor processes.");
+    INFOLOG("Completed asynchronous extractor processes.");
     int n_iters = 0;
     for(int i : adj_iters) {
         n_iters += i;
@@ -356,7 +341,7 @@ void AdaptiveFastExtractor::display_threshold_image(
     //thr.convertTo(thr, CV_8UC1, 1.0 / 255, 0);
     cv::applyColorMap(thr, cmap, cv::COLORMAP_HOT);
     cv::resize(cmap, cmap, {cmap.cols/2, cmap.rows/2});
-    cv::imshow("ADAFAST Cellular Thresholds", cmap);
+    vstk::imshow("ADAFAST Cellular threasholds", cmap);
     int key = (cv::waitKey(1) & 0xFF);
     if(key == 'q') {
         INFOLOG("Caught 'q' keypress, exitting process.");

@@ -3,6 +3,188 @@
 using namespace vstk;
 
 
+
+VstkConfig read_from_yaml(std::string yaml_file) {
+    VstkConfig cfg;
+    if(cfg.load_from_yaml(yaml_file) != EXIT_SUCCESS) {
+        ERRORLOG("Failed to load configuration from yaml file.");
+    }
+    INFOLOG("Successfully loaded configurations from yaml file.");
+    //INFOLOG("Directory 1 : %s, Directory 2 : %s", cfg.get_ste)
+    return cfg;
+}
+
+std::string type2str(int type) {
+    std::string r;
+
+    uchar depth = type & CV_MAT_DEPTH_MASK;
+    uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+    switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+    }
+
+    r += "C";
+    r += (chans+'0');
+
+    return r;
+}
+
+void vstk::describe_config(VstkConfig conf) {
+    std::stringstream ss;
+    
+    DBGLOG("CONFIG DESCRIPTION ::");
+
+    if(!conf.get_stereo_src_1().empty()) {
+        DBGLOG("--> left stereo source : %s", conf.get_stereo_src_1());
+        DBGLOG("--> right stereo source : %s", conf.get_stereo_src_2());
+    }
+
+    DBGLOG("--- [Start ADAFAST Properties] ---");
+    DBGLOG("\t --> min_count : %d", conf.get_min_count_adafast());
+    DBGLOG("\t --> max_count : %d", conf.get_max_count_adafast());
+    DBGLOG("\t --> min_threshold : %d", conf.get_min_threshold_adafast());
+    DBGLOG("\t --> max_threshold : %d", conf.get_max_threshold_adafast());
+    DBGLOG("\t --> cell_size : [%d X %d]", conf.get_cell_size_adafast().first, conf.get_cell_size_adafast().second);
+    DBGLOG("\t --> thread pool size : %d", conf.get_adafast_threadpool_size());
+    DBGLOG("xxx [End ADAFAST Properties] xxx");
+
+    DBGLOG("--- [Start Camera Parameters] ---");
+    DBGLOG("-- [Start Left Camera] --");
+    ss << conf.get_stereo_cam_params()->cam1_params.K << std::endl;
+    DBGLOG("\t --> K : \n%s", ss.str());
+    ss.clear();
+
+    ss << conf.get_stereo_cam_params()->cam1_params.dist_coeff << std::endl;
+    DBGLOG("\t --> Distortion Coeffecients : \n%s", ss.str());
+    ss.clear();
+    DBGLOG("xx [End left Camera] xx");
+
+    DBGLOG("-- [Start Right Camera] --");
+    ss << conf.get_stereo_cam_params()->cam2_params.K << std::endl << "Type : " << type2str(conf.get_stereo_cam_params()->cam2_params.K.type()) << std::endl;
+    DBGLOG("\t --> K : \n%s", ss.str());
+    ss.clear();
+    
+    ss << conf.get_stereo_cam_params()->cam2_params.dist_coeff << std::endl << "Type : " << type2str(conf.get_stereo_cam_params()->cam2_params.K.type()) << std::endl;
+    DBGLOG("\t --> Distortion Coeffecients : \n%s", ss.str());
+    ss.clear();
+    DBGLOG("xx [End Right Camera] xx");
+
+    ss << conf.get_stereo_cam_params()->Rs << std::endl;
+    DBGLOG("\t -->Rotation Matrix : \n%s", ss.str());
+    ss.clear();
+
+    ss << conf.get_stereo_cam_params()->ts << std::endl;
+    DBGLOG("\t --> Translation Vector : \n%s", ss.str());
+    ss.clear();
+
+    ss << conf.get_stereo_cam_params()->F <<std::endl;
+    DBGLOG("Fundamental Matrix : \n%s", ss.str());
+    ss.clear();
+
+    ss << conf.get_stereo_cam_params()->E <<std::endl;
+    DBGLOG("Essential Matrix : \n%s", ss.str());
+    ss.clear();
+    DBGLOG("xxx [End Camera Properties] xxx");
+}
+
+vstk::VstkConfig vstk::build_config_from_args(int argc, char**argv) {
+    vstk::VstkConfig conf;
+    std::string data_src;
+    std::string slam_type;
+    std::string f_algorithm;
+    vstk::FExtractionAlgorithm f_algorithm_enum = vstk::FExtractionAlgorithm::ADAPTIVE_FAST;
+    std::string d_algorithm;
+    vstk::DComputeAlgorithm d_compute_algorithm_enum = vstk::DComputeAlgorithm::ORB;
+    std::string m_algorithm;
+    vstk::MatchAlgorithm m_algorithm_enum = vstk::MatchAlgorithm::FLANN;
+    std::string config_file_path = "";
+    char c;
+    opterr = 0;
+
+    while ((c = getopt (argc, argv, "f:d:c:t:m:v")) != -1) {
+        switch (c) {
+            case 'f':
+                f_algorithm = std::string(optarg);
+                for (auto & ch: f_algorithm) ch = toupper(ch);
+
+                if(f_algorithm == "ADA_FAST")       f_algorithm_enum = vstk::FExtractionAlgorithm::ADAPTIVE_FAST;
+                if(f_algorithm == "FAST")           f_algorithm_enum = vstk::FExtractionAlgorithm::FAST;
+                if(f_algorithm == "ORB")            f_algorithm_enum = vstk::FExtractionAlgorithm::ORB;
+                if(f_algorithm == "SIFT")           f_algorithm_enum = vstk::FExtractionAlgorithm::SIFT;
+                break;
+
+            case 'd':
+                d_algorithm = std::string(optarg);
+                for (auto & ch: d_algorithm) ch = toupper(ch);
+
+                if(d_algorithm == "ORB")            d_compute_algorithm_enum = vstk::DComputeAlgorithm::ORB;
+                if(d_algorithm == "BRIEF")          d_compute_algorithm_enum = vstk::DComputeAlgorithm::BRIEF;
+                if(d_algorithm == "SIFT")           d_compute_algorithm_enum = vstk::DComputeAlgorithm::SIFT;
+                break;
+            
+            case 'm':
+                m_algorithm = std::string(optarg);
+                for (auto & ch: m_algorithm) ch = toupper(ch);
+
+                if(m_algorithm == "FLANN")          m_algorithm_enum = vstk::MatchAlgorithm::FLANN;
+                if(m_algorithm == "BF")             m_algorithm_enum = vstk::MatchAlgorithm::BF;
+                if(m_algorithm == "BF_HAMMING")     m_algorithm_enum = vstk::MatchAlgorithm::BF_HAMMING;
+                break;
+
+            case 'v':
+                vstk::Logger::get().enable_debug();
+                break;
+
+            case 'c':
+                config_file_path = std::string(optarg);
+                break;
+
+            default:
+                ERRORLOG("Unknwon option");
+                abort ();
+        }
+    }
+
+    if(!config_file_path.empty()) {
+        INFOLOG("Attempting to load configurations from YAML file : %s", config_file_path);
+        conf = read_from_yaml(config_file_path);
+        return conf;
+    }
+    
+    if(argc - optind < 1) {
+        ERRORLOG("Directory not specified");
+        //print_usage_and_unalive(argv[0]);
+    }
+    data_src = std::string(argv[optind]);
+
+    if(argc - optind == 2) {
+        slam_type = argv[optind];
+        for (auto & ch: m_algorithm) ch = toupper(ch);
+
+        if(slam_type == "MONO") conf.set_slam_type(vstk::SLAMType::MONO);
+        if(slam_type == "STEREO") conf.set_slam_type(vstk::SLAMType::STEREO);
+        if(slam_type == "RGBD") conf.set_slam_type(vstk::SLAMType::RGBD);
+    }
+    else {
+        conf.set_slam_type(vstk::SLAMType::STEREO);
+    }
+    conf.set_run_data_src(data_src);
+    conf.set_feature_extraction_algo(f_algorithm_enum);
+    conf.set_descriptor_compute_algo(d_compute_algorithm_enum);
+    conf.set_match_algo(m_algorithm_enum);
+
+    return conf;
+}
+
+
 VstkConfig::VstkConfig() {}
 
 VstkConfig::VstkConfig(RunType run_type, std::string working_dir) : 
@@ -78,7 +260,7 @@ int vstk::VstkConfig::get_num_features_retained() {
 }
 
 void vstk::VstkConfig::set_slam_type(vstk::SLAMType type) {
-    this->slam_type = slam_type;
+    this->slam_type = type;
 }
 
 SLAMType VstkConfig::get_slam_type() {
@@ -113,17 +295,41 @@ std::pair<int, int> VstkConfig::get_cell_size_adafast() {
 
 int VstkConfig::load_from_yaml(std::string filename) {
     int rc = 1;
+    cv::FileStorage fsref;
     cv::FileStorage fs(filename, cv::FileStorage::READ);
     cv::FileNode node;
 
     set_cfg<std::string>(fs["directory_pattern_l"], this->stereo_im1_source);
     set_cfg<std::string>(fs["directory_pattern_r"], this->stereo_im2_source);
     
+    this->slam_type = SLAMType::STEREO;
 
     rc = load_adafast_properties(fs["adafast"]);
     rc = load_detector_properties(fs["sparse_detector"]);
     rc = load_camera_properties(fs["cam_params"]);
+    rc = load_persistence_properties(fs["persistence"]);
     return rc;
+}
+
+int VstkConfig::load_persistence_properties(cv::FileNode node) {
+    int rc = ERROR_GENERIC;
+    if(!node.empty()) {
+        std::string type;
+        rc = this->set_cfg <std::string> (node["type"], type);
+        if(rc == 0) {
+            for (auto & ch: type) ch = toupper(ch);
+            if(type == "IN_MEMORY") {
+                PersistenceConfig p_cfg;
+                p_cfg.mode = vstk::PERSISTENCE_MODES::IN_PROCESS_MEMORY;
+                this->set_persistence_config(std::make_shared<vstk::PersistenceConfig>(p_cfg));
+            }
+            else (ERRORLOG("Unrecognized persistence type"));
+        }
+        else (ERRORLOG("Failed to read persistence type from config file"));
+    }
+    else (ERRORLOG("Persistence config is empty in config file"));
+    return rc;
+
 }
 
 int VstkConfig::load_adafast_properties(cv::FileNode node) {
@@ -205,18 +411,25 @@ void vstk::VstkConfig::set_mono_cam_params(std::shared_ptr<MonoCamParams> mono_p
     this->mono_cam_params = std::move(mono_params);
 }
 
-std::shared_ptr<vstk::StereoCamParams> vstk::VstkConfig::get_stereo_cam_params() {
+void vstk::VstkConfig::set_persistence_config(std::shared_ptr<PersistenceConfig> persistence_config) {
+    this->persistence_config = std::move(persistence_config);
+}
+
+StereoCamParamsPtr vstk::VstkConfig::get_stereo_cam_params() {
     return this->stereo_cam_params;
 }
 
-std::shared_ptr<vstk::MonoCamParams> vstk::VstkConfig::get_mono_cam_params() {
-    return std::move(this->mono_cam_params);
+MonoCamParamsPtr vstk::VstkConfig::get_mono_cam_params() {
+    return this->mono_cam_params;
+}
+
+PersistenceConfigPtr vstk::VstkConfig::get_persistence_config() {
+    return this->persistence_config;
 }
 
 int vstk::VstkConfig::get_adafast_threadpool_size() {
     return this->adafast_thread_count;
 }
-
 
 
 
